@@ -1,2 +1,2 @@
-# pikchrmirror
-Pikchr Editor with preview written in Rust
+# PikchrMirror
+Pikchr Editor with preview written in Rust.

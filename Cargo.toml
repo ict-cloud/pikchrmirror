@@ -1,0 +1,10 @@
+[package]
+name = "PikchrMirror"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pikchr = "0.1.*"
+
+[dependencies.floem]
+git = "https://github.com/lapce/floem"
