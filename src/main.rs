@@ -1,3 +1,5 @@
+mod img;
+
 use floem::{
     context::{self, UpdateCx}, keyboard::{Key, Modifiers, NamedKey}, peniko::Color, reactive::{create_rw_signal, use_context, RwSignal, SignalGet, SignalUpdate}, views::{
         button, container, dyn_container, editor::{
@@ -6,6 +8,7 @@ use floem::{
     }, IntoView, View
 };
 use pikchr::{Pikchr, PikchrFlags};
+use img::png::{self, svgstr_to_png};
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
@@ -80,7 +83,7 @@ fn app_view() -> impl IntoView {
         button("Render").action({
             let ldoc = doc.clone();
             move || {
-            println!("Render Butten clicked");
+            println!("Render Button clicked");
             let txt: String = ldoc.text().into();
             let (i, e) = pik_svgstring(&txt, piksvgstring.get().as_str());
             println!("errtext: {}", e);
@@ -93,7 +96,11 @@ fn app_view() -> impl IntoView {
                 EditType::DeleteSelection,
             );
         }),
-    ))
+        button("Save PNG").action(move ||{
+            println!("Save PNG clicked");
+            svgstr_to_png(piksvgstring.get().as_str());
+        }),
+        ))
     .style(|s| {
         s.flex_row()
             .width_full()

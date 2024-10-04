@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 pikchr = "0.1.*"
+resvg = "0.44.0"
 
 [dependencies.floem]
 git = "https://github.com/lapce/floem"
