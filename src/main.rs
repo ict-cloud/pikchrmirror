@@ -1,14 +1,14 @@
 mod img;
 
 use floem::{
-    context::{self, UpdateCx}, keyboard::{Key, Modifiers, NamedKey}, peniko::Color, reactive::{create_rw_signal, use_context, RwSignal, SignalGet, SignalUpdate}, views::{
+    keyboard::{Key, Modifiers, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
         button, container, dyn_container, editor::{
-            self, command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
+            command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
         }, stack, svg, text_editor, Decorators
     }, IntoView, View
 };
 use pikchr::{Pikchr, PikchrFlags};
-use img::png::{self, svgstr_to_png};
+use img::png::svgstr_to_png;
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
@@ -21,7 +21,6 @@ const TABBAR_HEIGHT: f64 = 37.0;
 const CONTENT_PADDING: f64 = 10.0;
 
 fn pik_rendered_failsafe(i_pikraw: &str, i_pikinst: &mut Pikchr) -> String {
-    let last_rendered = i_pikinst.to_owned();
     let mut render_error = String::from("");
     match Pikchr::render(i_pikraw, None, PikchrFlags::default()) {
         Ok(p) => *i_pikinst = p,
@@ -61,7 +60,7 @@ fn app_view() -> impl IntoView {
             }
             CommandExecuted::No
         })
-        .update(move |dlta| {
+        .update(move |_dlta| {
             println!("Editor changed");
             // let txt = dlta.editor.unwrap().text().clone();
             // let rawtext = txt.to_string();
