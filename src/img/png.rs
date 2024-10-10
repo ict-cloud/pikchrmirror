@@ -1,6 +1,6 @@
 use resvg::{usvg, tiny_skia};
 
-pub fn svgstr_to_png(i_svgstr: &str) {
+pub fn svgstr_to_png(i_svgstr: &str, i_file_path: &str ) {
   let tree = {
     let mut opt = usvg::Options::default();
 
@@ -12,5 +12,5 @@ pub fn svgstr_to_png(i_svgstr: &str) {
   let pixmap_size = tree.size().to_int_size();
   let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
   resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-  pixmap.save_png("test.png").unwrap();
+  pixmap.save_png(i_file_path).unwrap();
 }

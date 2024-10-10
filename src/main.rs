@@ -5,7 +5,9 @@ use floem::{
         button, container, dyn_container, editor::{
             command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
         }, stack, svg, text_editor, Decorators
-    }, IntoView, View
+    }, IntoView, View,
+    file::FileDialogOptions,
+    action::save_as
 };
 use pikchr::{Pikchr, PikchrFlags};
 use img::png::svgstr_to_png;
@@ -97,7 +99,18 @@ fn app_view() -> impl IntoView {
         }),
         button("Save PNG").action(move ||{
             println!("Save PNG clicked");
-            svgstr_to_png(piksvgstring.get().as_str());
+            save_as(
+                FileDialogOptions::new()
+                    .default_name("pikchr.png")
+                    .title("Save file"),
+                move |file_info| {
+                    if let Some(file) = file_info {
+                        println!("Save file to: {:?}", file.path);
+                        svgstr_to_png(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
+                    }
+                },
+            );
+            
         }),
         ))
     .style(|s| {
