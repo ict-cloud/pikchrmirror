@@ -86,7 +86,7 @@ fn app_view() -> impl IntoView {
             move || {
             println!("Render Button clicked");
             let txt: String = ldoc.text().into();
-            let (i, e) = pik_svgstring(&txt, piksvgstring.get().as_str());
+            let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
             println!("errtext: {}", e);
             piksvgstring.set(i);
         }}),
@@ -123,12 +123,14 @@ fn app_view() -> impl IntoView {
             .border_color(Color::rgb8(205, 205, 205))
     });
 
+    // should be a dyn stack to adjust or react to the new value
     let piked = stack((
         editor,
         svg_result,
     ))
     .style(|s| s.height_full().width_full().flex_row().items_center().justify_center());
 
+    // should be a dyn stack to adjust/react to the new value
     let view = stack((
         piked,
         tabs_bar,
