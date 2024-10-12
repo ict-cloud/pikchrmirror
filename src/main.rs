@@ -63,7 +63,7 @@ fn app_view() -> impl IntoView {
             CommandExecuted::No
         })
         .update(move |_dlta| {
-            println!("Editor changed");
+            //println!("Editor changed");
             // let txt = dlta.editor.unwrap().text().clone();
             // let rawtext = txt.to_string();
             // println!("{:?}", rawtext);
@@ -75,8 +75,8 @@ fn app_view() -> impl IntoView {
     let doc = editor.doc();
 
     let svg_result = dyn_container(
-        move || svg(piksvgstring.get()).style(|s| s.size_full().flex()),
-        move |v| v
+        move || piksvgstring.get(),
+        move |pkchr| svg(pkchr).style(|s| s.size_full().flex())
         )
         .style(|s| s.size_full());
 
@@ -130,7 +130,6 @@ fn app_view() -> impl IntoView {
     ))
     .style(|s| s.height_full().width_full().flex_row().items_center().justify_center());
 
-    // should be a dyn stack to adjust/react to the new value
     let view = stack((
         piked,
         tabs_bar,
