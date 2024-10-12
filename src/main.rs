@@ -33,7 +33,7 @@ fn pik_rendered_failsafe(i_pikraw: &str, i_pikinst: &mut Pikchr) -> String {
 
 fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
     let mut pik_err = String::from("");
-    let mut svg_str = String::from("");
+    let mut svg_str: String = String::from("");
     match Pikchr::render(i_raw, None, PikchrFlags::default()) {
         Ok(p) => svg_str = p.rendered().to_owned(),
         Err(e) => {pik_err = e.to_owned(); svg_str = i_svg_old.to_owned();},
@@ -45,7 +45,7 @@ fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
 fn app_view() -> impl IntoView {
 
     let (s, e) = pik_svgstring(DFLT_TEXT, "");
-    println!("Initial render error: {}", e);
+    log::debug!("Initial render error: {}", e);
     let piksvgstring = create_rw_signal(s);
 
     let hide_gutter_a = RwSignal::new(false);
@@ -63,7 +63,7 @@ fn app_view() -> impl IntoView {
             CommandExecuted::No
         })
         .update(move |_dlta| {
-            //println!("Editor changed");
+            log::debug!("Editor changed");
             // let txt = dlta.editor.unwrap().text().clone();
             // let rawtext = txt.to_string();
             // println!("{:?}", rawtext);
@@ -84,10 +84,10 @@ fn app_view() -> impl IntoView {
         button("Render").action({
             let ldoc = doc.clone();
             move || {
-            println!("Render Button clicked");
+            log::debug!("Render Button clicked");
             let txt: String = ldoc.text().into();
             let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
-            println!("errtext: {}", e);
+            log::warn!("errtext: {}", e);
             piksvgstring.set(i);
         }}),
         button("Clear").action(move || {
@@ -98,14 +98,14 @@ fn app_view() -> impl IntoView {
             );
         }),
         button("Save PNG").action(move ||{
-            println!("Save PNG clicked");
+            log::debug!("Save PNG clicked");
             save_as(
                 FileDialogOptions::new()
                     .default_name("pikchr.png")
                     .title("Save file"),
                 move |file_info| {
                     if let Some(file) = file_info {
-                        println!("Save file to: {:?}", file.path);
+                        log::debug!("Save file to: {:?}", file.path);
                         svgstr_to_png(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
                     }
                 },
@@ -143,5 +143,7 @@ fn app_view() -> impl IntoView {
 }
 
 fn main() {
+    pretty_env_logger::init();
+    log::debug!("Hello, PikchrMirror!");
     floem::launch(app_view)
 }
