@@ -22,21 +22,11 @@ box same "Pikchr" "Formatter" "(pikchr.c)" fit
 const TABBAR_HEIGHT: f64 = 37.0;
 const CONTENT_PADDING: f64 = 10.0;
 
-fn pik_rendered_failsafe(i_pikraw: &str, i_pikinst: &mut Pikchr) -> String {
-    let mut render_error = String::from("");
-    match Pikchr::render(i_pikraw, None, PikchrFlags::default()) {
-        Ok(p) => *i_pikinst = p,
-        Err(e) => render_error = e.to_owned(),
-    };
-    render_error
-}
-
 fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
     let mut pik_err = String::from("");
-    let mut svg_str: String = String::from("");
-    match Pikchr::render(i_raw, None, PikchrFlags::default()) {
-        Ok(p) => svg_str = p.rendered().to_owned(),
-        Err(e) => {pik_err = e.to_owned(); svg_str = i_svg_old.to_owned();},
+    let svg_str = match Pikchr::render(i_raw, None, PikchrFlags::default()) {
+        Ok(p) => p.rendered().to_owned(),
+        Err(e) => {pik_err = e.to_owned(); i_svg_old.to_owned()},
     };
 
     (svg_str, pik_err)
