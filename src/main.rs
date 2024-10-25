@@ -12,6 +12,9 @@ use floem::{
 use pikchr::{Pikchr, PikchrFlags};
 use img::png::svgstr_to_png;
 
+#[cfg(test)]
+mod tests;
+
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
 arrow right 200% "HTML+SVG" "Output"
