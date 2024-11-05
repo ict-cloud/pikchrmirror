@@ -2,7 +2,7 @@ mod img;
 mod parser;
 
 use floem::{
-    keyboard::{Key, Modifiers, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
+    keyboard::{Key, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
         button, container, dyn_container, editor::{
             command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
         }, stack, svg, text_editor, Decorators
@@ -10,7 +10,6 @@ use floem::{
     file::FileDialogOptions,
     action::save_as
 };
-use pikchr::{Pikchr, PikchrFlags};
 use img::png::svgstr_to_png;
 use parser::pikchr::pik_svgstring;
 

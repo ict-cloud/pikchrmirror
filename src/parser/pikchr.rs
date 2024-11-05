@@ -1,6 +1,4 @@
-use resvg::usvg::{Tree, Options, Node};
 use pikchr::{Pikchr, PikchrFlags};
-
 
 // fn scale_svg(svg_string: &str, scale_factor: f64) -> Result<String, String> {
 //     let opt = Options::default();
