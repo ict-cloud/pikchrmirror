@@ -1,4 +1,5 @@
 mod img;
+mod parser;
 
 use floem::{
     keyboard::{Key, Modifiers, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
@@ -11,6 +12,7 @@ use floem::{
 };
 use pikchr::{Pikchr, PikchrFlags};
 use img::png::svgstr_to_png;
+use parser::pikchr::pik_svgstring;
 
 #[cfg(test)]
 mod tests;
@@ -24,16 +26,6 @@ box same "Pikchr" "Formatter" "(pikchr.c)" fit
 
 const TABBAR_HEIGHT: f64 = 37.0;
 const CONTENT_PADDING: f64 = 10.0;
-
-fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
-    let mut pik_err = String::from("");
-    let svg_str = match Pikchr::render(i_raw, None, PikchrFlags::default()) {
-        Ok(p) => p.rendered().to_owned(),
-        Err(e) => {pik_err = e.to_owned(); i_svg_old.to_owned()},
-    };
-
-    (svg_str, pik_err)
-}
 
 fn app_view() -> impl IntoView {
 
@@ -130,7 +122,7 @@ fn app_view() -> impl IntoView {
     .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
-    view.on_key_up(Key::Named(NamedKey::F11), Modifiers::empty(), move |_| {
+    view.on_key_up(Key::Named(NamedKey::F11), |m| m.is_empty(), move |_| {
         id.inspect()
     })
 }
