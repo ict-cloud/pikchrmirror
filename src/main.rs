@@ -3,12 +3,13 @@ mod parser;
 
 use floem::{
     keyboard::{Key, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
-        button, container, dyn_container, editor::{
+        button, container, dyn_container, SvgColor, editor::{
             command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
         }, stack, svg, text_editor, Decorators
     }, IntoView, View,
     file::FileDialogOptions,
-    action::save_as
+    action::save_as,
+    peniko::Brush,
 };
 use img::png::svgstr_to_png;
 use parser::pikchr::pik_svgstring;
@@ -60,7 +61,8 @@ fn app_view() -> impl IntoView {
 
     let svg_result = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| svg(pkchr).style(|s| s.size_full().flex())
+        move |pkchr| svg(pkchr)
+            .style(|s| s.size_full().flex().set(SvgColor, Brush::Solid(Color::BLACK)))
         )
         .style(|s| s.size_full());
 
