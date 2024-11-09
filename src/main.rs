@@ -11,7 +11,7 @@ use floem::{
     action::save_as,
     peniko::Brush,
 };
-use img::png::svgstr_to_png;
+use img::png;
 use parser::pikchr::pik_svgstring;
 
 #[cfg(test)]
@@ -92,7 +92,7 @@ fn app_view() -> impl IntoView {
                 move |file_info| {
                     if let Some(file) = file_info {
                         log::debug!("Save file to: {:?}", file.path);
-                        svgstr_to_png(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
+                        png::svgstr_to_pngfile(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
                     }
                 },
             );

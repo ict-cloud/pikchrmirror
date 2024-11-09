@@ -8,5 +8,10 @@ const TST_SVG: &str = r#"
 </svg>"#;
 
 pub fn it_img_xport() {
-  png::svgstr_to_png(TST_SVG, "./test.png");
+  png::svgstr_to_pngfile(TST_SVG, "./test.png");
+}
+
+pub fn it_img_encode() {
+  let png = png::svg_to_png(TST_SVG);
+  assert!(png.len() > 0);
 }

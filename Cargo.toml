@@ -13,4 +13,5 @@ version = "0.44.*"
 
 [dependencies.floem]
 git = "https://github.com/lapce/floem"
+# rev = "b9bcd24"
 features = ["editor", "default-image-formats", "rfd-async-std"]

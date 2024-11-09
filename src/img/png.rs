@@ -1,6 +1,6 @@
-use resvg::{usvg, tiny_skia};
+use resvg::{tiny_skia::{self, Pixmap}, usvg};
 
-pub fn svgstr_to_png(i_svgstr: &str, i_file_path: &str ) {
+fn pm_from_svgstr(i_svgstr: &str) -> Pixmap {
   let tree = {
     let mut opt = usvg::Options::default();
     opt.fontdb_mut().load_system_fonts();
@@ -18,5 +18,15 @@ pub fn svgstr_to_png(i_svgstr: &str, i_file_path: &str ) {
 
   let mut pixmap = tiny_skia::Pixmap::new(scaled_size.width(), scaled_size.height()).expect("Valid parameters");
   resvg::render(&tree, transform, &mut pixmap.as_mut());
+  pixmap
+}
+
+pub fn svg_to_png(i_svg: &str) -> Vec<u8> {
+  let pm = pm_from_svgstr(i_svg);
+  pm.encode_png().expect("PNG encoded")
+}
+
+pub fn svgstr_to_pngfile(i_svgstr: &str, i_file_path: &str ) {
+  let pixmap = pm_from_svgstr(i_svgstr);
   pixmap.save_png(i_file_path).expect("PNG successfully saved");
 }
