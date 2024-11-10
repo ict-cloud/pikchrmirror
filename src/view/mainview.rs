@@ -1,12 +1,9 @@
 use floem::{
-  keyboard::{Key, NamedKey}, peniko::Color, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, views::{
-      button, container, dyn_container, SvgColor, editor::{
+  action::save_as, file::FileDialogOptions, keyboard::{Key, NamedKey}, peniko::{Brush, Color}, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, unit::UnitExt, views::{
+      button, container, dyn_container, editor::{
           command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
-      }, stack, svg, text_editor, Decorators
-  }, IntoView, View,
-  file::FileDialogOptions,
-  action::save_as,
-  peniko::Brush,
+      }, img, stack, svg, text_editor, Decorators, HorizPosition, ObjectFit, SvgColor, VertPosition
+  }, IntoView, View
 };
 use crate::img::png;
 use crate::parser::pikchr::pik_svgstring;
@@ -53,12 +50,18 @@ pub fn app_view() -> impl IntoView {
         .placeholder("Some placeholder text");
     let doc = editor.doc();
 
-    let svg_result = dyn_container(
+    // let svg_result = dyn_container(
+    //     move || piksvgstring.get(),
+    //     move |pkchr| svg(pkchr)
+    //         .style(|s| s.size_full().flex().set(SvgColor, Brush::Solid(Color::BLACK)))
+    //     )
+    //     .style(|s| s.size_full());
+
+    let svg_preview = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| svg(pkchr)
-            .style(|s| s.size_full().flex().set(SvgColor, Brush::Solid(Color::BLACK)))
-        )
-        .style(|s| s.size_full());
+        move |pkchr| img(move ||png::svg_to_png(&pkchr))
+          .style(|s| s.width(320.px()).height(160.px())) // scaling needs to be dynamic to adapt teh dyn_container
+    );
 
     let tabs_bar = container((
         button("Render").action({
@@ -106,7 +109,7 @@ pub fn app_view() -> impl IntoView {
     // should be a dyn stack to adjust or react to the new value
     let piked = stack((
         editor,
-        svg_result,
+        svg_preview,
     ))
     .style(|s| s.height_full().width_full().flex_row().items_center().justify_center());
 
