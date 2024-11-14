@@ -1,10 +1,12 @@
-use floem::{
-  action::save_as, file::FileDialogOptions, keyboard::{Key, NamedKey}, peniko::{Brush, Color}, reactive::{create_rw_signal, RwSignal, SignalGet, SignalUpdate}, unit::UnitExt, views::{
-      button, container, dyn_container, editor::{
-          command::{Command, CommandExecuted}, core::{command::EditCommand, editor::EditType, selection::Selection}, text::{default_dark_color, SimpleStyling}
-      }, img, stack, svg, text_editor, Decorators, HorizPosition, ObjectFit, SvgColor, VertPosition
-  }, IntoView, View
-};
+use floem::prelude::*;
+use editor::command::{Command, CommandExecuted};
+use editor::core::command::EditCommand;
+use editor::core::editor::EditType;
+use editor::core::selection::Selection;
+use editor::text::{default_dark_color, SimpleStyling};
+use floem::action::save_as;
+use floem::file::FileDialogOptions;
+use floem::keyboard::{Key, NamedKey};
 use crate::img::png;
 use crate::parser::pikchr::pik_svgstring;
 
@@ -59,8 +61,8 @@ pub fn app_view() -> impl IntoView {
 
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| img(move ||png::svg_to_png(&pkchr))
-          .style(|s| s.width(320.px()).height(160.px())) // scaling needs to be dynamic to adapt teh dyn_container
+        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s| s.flex_shrink(10.0))
+        .style(|s| s) // scaling needs to be dynamic to adapt the dyn_container
     );
 
     let tabs_bar = container((
@@ -111,7 +113,7 @@ pub fn app_view() -> impl IntoView {
         editor,
         svg_preview,
     ))
-    .style(|s| s.height_full().width_full().flex_row().items_center().justify_center());
+    .style(|s| s.flex_row().width_full().items_center().justify_center());
 
     let view = stack((
         piked,
