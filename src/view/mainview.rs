@@ -1,4 +1,4 @@
-use floem::prelude::*;
+use floem::{prelude::*, window};
 use editor::command::{Command, CommandExecuted};
 use editor::core::command::EditCommand;
 use editor::core::editor::EditType;
@@ -7,6 +7,8 @@ use editor::text::{default_dark_color, SimpleStyling};
 use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
+use floem::ViewId;
+use floem::style::Width;
 use crate::img::png;
 use crate::parser::pikchr::pik_svgstring;
 
@@ -30,7 +32,7 @@ pub fn app_view() -> impl IntoView {
 
     let editor = text_editor(DFLT_TEXT)
         .styling(SimpleStyling::new())
-        .style(|s| s.size_full())
+        .style(|s| s.size_full().max_width_pct(50.0))
         .editor_style(default_dark_color)
         .editor_style(move |s| s.hide_gutter(hide_gutter_a.get()))
         .pre_command(|ev| {
@@ -59,11 +61,16 @@ pub fn app_view() -> impl IntoView {
     //     )
     //     .style(|s| s.size_full());
 
+    //let preview_width = editor.view_style().expect("valid style").get(Width);
+    let preview_width: ViewId = editor.id();
+    //let preview_width = editor.id().inspect();
+    println!("Preview Width {:?}", preview_width.get_size().unwrap().width);
+
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s| s.flex_shrink(10.0))
-        .style(|s| s) // scaling needs to be dynamic to adapt the dyn_container
-    );
+        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s|s.max_width_pct(100.0).scale_x(100.0)) // scaling needs to be dynamic to adapt the dyn_container
+    )
+    .style(|s| s.max_width_pct(50.0));
 
     let tabs_bar = container((
         button("Render").action({
@@ -115,9 +122,15 @@ pub fn app_view() -> impl IntoView {
     ))
     .style(|s| s.flex_row().width_full().items_center().justify_center());
 
+    let id = piked.id();
+    let inspector = button("Open Inspector")
+        .action(move || id.inspect())
+        .style(|s| s);
+
     let view = stack((
         piked,
         tabs_bar,
+        inspector,
     ))
     .style(|s| s.size_full().flex_col().items_center().justify_center());
 
