@@ -5,7 +5,12 @@ fn pm_from_svgstr(i_svgstr: &str) -> Pixmap {
     let mut opt = usvg::Options::default();
     opt.fontdb_mut().load_system_fonts();
 
-    usvg::Tree::from_str(i_svgstr, &opt).expect("Valid SVG Tree")
+    let safe_svgstr = if i_svgstr.starts_with("<!-- empty pikchr diagram -->") {
+      r#"<svg xmlns='http://www.w3.org/2000/svg'/>"#
+    } else {
+      i_svgstr
+    };
+    usvg::Tree::from_str(safe_svgstr, &opt).expect("Valid SVG Tree")
   };
 
   let pixmap_size = tree.size().to_int_size();

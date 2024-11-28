@@ -1,4 +1,4 @@
-use floem::{prelude::*, window};
+use floem::{prelude::*, window, WindowIdExt};
 use editor::command::{Command, CommandExecuted};
 use editor::core::command::EditCommand;
 use editor::core::editor::EditType;
@@ -24,7 +24,7 @@ const CONTENT_PADDING: f64 = 10.0;
 
 pub fn app_view() -> impl IntoView {
 
-    let (s, e) = pik_svgstring(DFLT_TEXT, "");
+    let (s, e) = pik_svgstring("", "");
     log::debug!("Initial render error: {}", e);
     let piksvgstring = create_rw_signal(s);
 
@@ -62,9 +62,9 @@ pub fn app_view() -> impl IntoView {
     //     .style(|s| s.size_full());
 
     //let preview_width = editor.view_style().expect("valid style").get(Width);
-    let preview_width: ViewId = editor.id();
+    let preview_width = editor.id().get_content_rect();
     //let preview_width = editor.id().inspect();
-    println!("Preview Width {:?}", preview_width.get_size().unwrap().width);
+    println!("Preview Width {:?}", preview_width.width());
 
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
@@ -134,8 +134,12 @@ pub fn app_view() -> impl IntoView {
     ))
     .style(|s| s.size_full().flex_col().items_center().justify_center());
 
+    let (s, _) = pik_svgstring(DFLT_TEXT, piksvgstring.get_untracked().as_str());
+    piksvgstring.set(s);
+
     let id = view.id();
     view.on_key_up(Key::Named(NamedKey::F11), |m| m.is_empty(), move |_| {
         id.inspect()
     })
+
 }
