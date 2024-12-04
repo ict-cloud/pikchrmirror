@@ -1,4 +1,4 @@
-use floem::{prelude::*, window, WindowIdExt};
+use floem::prelude::*;
 use editor::command::{Command, CommandExecuted};
 use editor::core::command::EditCommand;
 use editor::core::editor::EditType;
@@ -7,8 +7,6 @@ use editor::text::{default_dark_color, SimpleStyling};
 use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
-use floem::ViewId;
-use floem::style::Width;
 use crate::img::png;
 use crate::parser::pikchr::pik_svgstring;
 
@@ -62,15 +60,14 @@ pub fn app_view() -> impl IntoView {
     //     .style(|s| s.size_full());
 
     //let preview_width = editor.view_style().expect("valid style").get(Width);
-    let preview_width = editor.id().get_content_rect();
+    //let preview_width = editor.id().get_content_rect();
     //let preview_width = editor.id().inspect();
-    println!("Preview Width {:?}", preview_width.width());
+    //println!("Preview Width {:?}", preview_width.width());
 
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s|s.max_width_pct(100.0).scale_x(100.0)) // scaling needs to be dynamic to adapt the dyn_container
-    )
-    .style(|s| s.max_width_pct(50.0));
+        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s|s.max_width_pct(100.0)) // scaling needs to be dynamic to adapt the dyn_container
+    ).scroll().style(|s| s.max_width_pct(50.0));
 
     let tabs_bar = container((
         button("Render").action({
@@ -116,6 +113,7 @@ pub fn app_view() -> impl IntoView {
     });
 
     // should be a dyn stack to adjust or react to the new value
+    let ed = editor.id();
     let piked = stack((
         editor,
         svg_preview,
@@ -133,6 +131,11 @@ pub fn app_view() -> impl IntoView {
         inspector,
     ))
     .style(|s| s.size_full().flex_col().items_center().justify_center());
+
+    //let preview_width = editor.view_style().expect("valid style").get(Width);
+    let preview_width = ed.get_content_rect();
+    //let preview_width = editor.id().inspect();
+    println!("Preview Width {:?}", preview_width.width());
 
     let (s, _) = pik_svgstring(DFLT_TEXT, piksvgstring.get_untracked().as_str());
     piksvgstring.set(s);
