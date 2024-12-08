@@ -71,6 +71,8 @@ pub fn app_view() -> impl IntoView {
 
     let tabs_bar = container((
         button("Render").action({
+            let preview_id = svg_preview.id();
+            println!("Preview With Render: {}", preview_id.get_content_rect().width());
             let ldoc = doc.clone();
             move || {
             log::debug!("Render Button clicked");

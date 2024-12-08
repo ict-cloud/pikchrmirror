@@ -1,4 +1,4 @@
-use floem::prelude::*;
+use floem::{prelude::*, ViewId};
 use floem::prelude::editor::text::Document;
 use std::rc::Rc;
 use crate::parser::pikchr::pik_svgstring;
@@ -7,6 +7,7 @@ const TABBAR_HEIGHT: f64 = 37.0;
 const CONTENT_PADDING: f64 = 10.0;
 
 fn render_button(i_txt: String, i_svgstr: RwSignal<String>) -> Button {
+  // try to find the size of the window
   button("Render").action({
     let ltxt = i_txt.clone();
     move || {
@@ -25,7 +26,7 @@ fn save_button(i_svgstr: RwSignal<String>) -> Button {
   todo!()
 }
 
-pub fn tabbar_container(i_doc: &Rc<dyn Document>, i_pikstr: RwSignal<String>) -> impl IntoView {
+pub fn tabbar_container(i_doc: &Rc<dyn Document>, i_pikstr: RwSignal<String>, i_preview_id: ViewId) -> impl IntoView {
   let doctxt: String = i_doc.text().into();
   let render = render_button(doctxt, i_pikstr);
   let clear = clear_button(&i_doc);

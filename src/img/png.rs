@@ -17,9 +17,9 @@ fn pm_from_svgstr(i_svgstr: &str) -> Pixmap {
   // pixmap size should fit a given width of 1600
   // for this the factor needs to be applied to height as well
   //let tree2 = tree.size().scale_to(pixmap_size);
-  let scale_factor = 1600.0 / pixmap_size.width() as f32;
+  let scale_factor = 800.0 / pixmap_size.width() as f32;
   let transform = resvg::tiny_skia::Transform::from_scale(scale_factor, scale_factor);
-  let scaled_size = pixmap_size.scale_to_width(1600).expect("successful scaled the size");
+  let scaled_size = pixmap_size.scale_to_width(800).expect("successful scaled the size");
 
   let mut pixmap = tiny_skia::Pixmap::new(scaled_size.width(), scaled_size.height()).expect("Valid parameters");
   resvg::render(&tree, transform, &mut pixmap.as_mut());
