@@ -8,7 +8,7 @@ use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
 use crate::img::png;
-use crate::parser::pikchr::pik_svgstring;
+use crate::parser::pikchr::{pik_preview_width, pik_svgstring};
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
@@ -64,6 +64,9 @@ pub fn app_view() -> impl IntoView {
     //let preview_width = editor.id().inspect();
     //println!("Preview Width {:?}", preview_width.width());
 
+    // preview png should be rendered behind the button and stored in a rw_signal
+    // the save version should then be rendered dedicated with another size
+
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
         move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s|s.max_width_pct(100.0)) // scaling needs to be dynamic to adapt the dyn_container
@@ -72,11 +75,13 @@ pub fn app_view() -> impl IntoView {
     let tabs_bar = container((
         button("Render").action({
             let preview_id = svg_preview.id();
-            println!("Preview With Render: {}", preview_id.get_content_rect().width());
             let ldoc = doc.clone();
             move || {
             log::debug!("Render Button clicked");
+            log::debug!("Preview With Render: {}", preview_id.get_content_rect().width());
             let txt: String = ldoc.text().into();
+            // calculate the preview here and load the picture in a rw_signal
+            let b = pik_preview_width(&txt, 400.0);
             let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
             log::warn!("errtext: {}", e);
             piksvgstring.set(i);
