@@ -12,6 +12,6 @@ pub fn it_img_xport() {
 }
 
 pub fn it_img_encode() {
-  let png = png::svg_to_png(TST_SVG);
+  let png = png::svg_to_png(TST_SVG, None);
   assert!(png.len() > 0);
 }

@@ -69,7 +69,7 @@ pub fn app_view() -> impl IntoView {
 
     let svg_preview = dyn_container(
         move || piksvgstring.get(),
-        move |pkchr| img(move ||png::svg_to_png(&pkchr)).style(|s|s.max_width_pct(100.0)) // scaling needs to be dynamic to adapt the dyn_container
+        move |pkchr| img(move ||png::svg_to_png(&pkchr, None)).style(|s|s.max_width_pct(100.0)) // scaling needs to be dynamic to adapt the dyn_container
     ).scroll().style(|s| s.max_width_pct(50.0));
 
     let tabs_bar = container((

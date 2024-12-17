@@ -1,6 +1,7 @@
 use std::str::Bytes;
 
 use pikchr::{Pikchr, PikchrFlags};
+use crate::img::png;
 
 pub fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
   let mut pik_err = String::from("");
@@ -24,10 +25,12 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
       format!(
         r#"
   <svg xmlns='http://www.w3.org/2000/svg'/>
-  <text>{}</text>
+  <text><![CDATA[{}]]</text>
   "#, e.as_str())
     }
   };
   println!("{}", svgstr);
-  svgstr.as_bytes().to_owned()
+  let img = png::svg_to_png(&svgstr, Some(i_width));
+  //svgstr.as_bytes().to_owned()
+  img
 }
