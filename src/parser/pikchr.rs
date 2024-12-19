@@ -1,5 +1,3 @@
-use std::str::Bytes;
-
 use pikchr::{Pikchr, PikchrFlags};
 use crate::img::png;
 
@@ -30,7 +28,11 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
     }
   };
   println!("{}", svgstr);
-  let img = png::svg_to_png(&svgstr, Some(i_width));
-  //svgstr.as_bytes().to_owned()
+  let prev_width = if i_width > 0.0 {
+    Some(i_width)
+  } else {
+    None
+  };
+  let img = png::svg_to_png(&svgstr, prev_width);
   img
 }

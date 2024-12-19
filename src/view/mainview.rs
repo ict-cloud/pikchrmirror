@@ -26,6 +26,10 @@ pub fn app_view() -> impl IntoView {
     log::debug!("Initial render error: {}", e);
     let piksvgstring = create_rw_signal(s);
 
+    let p: Vec<u8> = Vec::new();
+
+    let pikpreview = create_rw_signal(p);
+
     let hide_gutter_a = RwSignal::new(false);
 
     let editor = text_editor(DFLT_TEXT)
@@ -68,8 +72,8 @@ pub fn app_view() -> impl IntoView {
     // the save version should then be rendered dedicated with another size
 
     let svg_preview = dyn_container(
-        move || piksvgstring.get(),
-        move |pkchr| img(move ||png::svg_to_png(&pkchr, None)).style(|s|s.max_width_pct(100.0)) // scaling needs to be dynamic to adapt the dyn_container
+        move || pikpreview.get(),
+        move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
     ).scroll().style(|s| s.max_width_pct(50.0));
 
     let tabs_bar = container((
@@ -81,10 +85,11 @@ pub fn app_view() -> impl IntoView {
             log::debug!("Preview With Render: {}", preview_id.get_content_rect().width());
             let txt: String = ldoc.text().into();
             // calculate the preview here and load the picture in a rw_signal
-            let b = pik_preview_width(&txt, 400.0);
+            let b = pik_preview_width(&txt, preview_id.get_content_rect().width());
             let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
             log::warn!("errtext: {}", e);
             piksvgstring.set(i);
+            pikpreview.set(b);
         }}),
         button("Clear").action(move || {
             doc.edit_single(
