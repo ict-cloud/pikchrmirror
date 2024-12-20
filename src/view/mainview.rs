@@ -9,6 +9,7 @@ use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
 use crate::img::png;
 use crate::parser::pikchr::{pik_preview_width, pik_svgstring};
+use crate::view::tabview;
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
@@ -76,53 +77,56 @@ pub fn app_view() -> impl IntoView {
         move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
     ).scroll().style(|s| s.max_width_pct(50.0));
 
-    let tabs_bar = container((
-        button("Render").action({
-            let preview_id = svg_preview.id();
-            let ldoc = doc.clone();
-            move || {
-            log::debug!("Render Button clicked");
-            log::debug!("Preview With Render: {}", preview_id.get_content_rect().width());
-            let txt: String = ldoc.text().into();
-            // calculate the preview here and load the picture in a rw_signal
-            let b = pik_preview_width(&txt, preview_id.get_content_rect().width());
-            let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
-            log::warn!("errtext: {}", e);
-            piksvgstring.set(i);
-            pikpreview.set(b);
-        }}),
-        button("Clear").action(move || {
-            doc.edit_single(
-                Selection::region(0, doc.text().len()),
-                "",
-                EditType::DeleteSelection,
-            );
-        }),
-        button("Save PNG").action(move ||{
-            log::debug!("Save PNG clicked");
-            save_as(
-                FileDialogOptions::new()
-                    .default_name("pikchr.png")
-                    .title("Save file"),
-                move |file_info| {
-                    if let Some(file) = file_info {
-                        log::debug!("Save file to: {:?}", file.path);
-                        png::svgstr_to_pngfile(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
-                    }
-                },
-            );
+    // let tabs_bar = container((
+    //     button("Render").action({
+    //         let preview_id = svg_preview.id();
+    //         let ldoc = doc.clone();
+    //         move || {
+    //         log::debug!("Render Button clicked");
+    //         log::debug!("Preview With Render: {}", preview_id.get_content_rect().width());
+    //         let txt: String = ldoc.text().into();
+    //         // calculate the preview here and load the picture in a rw_signal
+    //         let b = pik_preview_width(&txt, preview_id.get_content_rect().width());
+    //         let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
+    //         log::warn!("errtext: {}", e);
+    //         piksvgstring.set(i);
+    //         pikpreview.set(b);
+    //     }}),
+    //     button("Clear").action(move || {
+    //         doc.edit_single(
+    //             Selection::region(0, doc.text().len()),
+    //             "",
+    //             EditType::DeleteSelection,
+    //         );
+    //     }),
+    //     button("Save PNG").action(move ||{
+    //         log::debug!("Save PNG clicked");
+    //         save_as(
+    //             FileDialogOptions::new()
+    //                 .default_name("pikchr.png")
+    //                 .title("Save file"),
+    //             move |file_info| {
+    //                 if let Some(file) = file_info {
+    //                     log::debug!("Save file to: {:?}", file.path);
+    //                     png::svgstr_to_pngfile(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
+    //                 }
+    //             },
+    //         );
             
-        }),
-        ))
-    .style(|s| {
-        s.flex_row()
-            .width_full()
-            .height(TABBAR_HEIGHT)
-            .row_gap(5)
-            .padding(CONTENT_PADDING)
-            .border_bottom(1)
-            .border_color(Color::rgb8(205, 205, 205))
-    });
+    //     }),
+    //     ))
+    // .style(|s| {
+    //     s.flex_row()
+    //         .width_full()
+    //         .height(TABBAR_HEIGHT)
+    //         .row_gap(5)
+    //         .padding(CONTENT_PADDING)
+    //         .border_bottom(1)
+    //         .border_color(Color::rgb8(205, 205, 205))
+    // });
+
+    let ref_doc = &doc.clone();
+    let tabs_bar = tabview::tabbar_container(&ref_doc, piksvgstring, pikpreview, svg_preview.id());
 
     // should be a dyn stack to adjust or react to the new value
     let ed = editor.id();
