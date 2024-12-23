@@ -75,7 +75,7 @@ pub fn app_view() -> impl IntoView {
     let svg_preview = dyn_container(
         move || pikpreview.get(),
         move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
-    ).scroll().style(|s| s.max_width_pct(50.0));
+    ).scroll().style(|s| s.max_width_pct(50.0).height_full());
 
     // let tabs_bar = container((
     //     button("Render").action({
@@ -126,7 +126,7 @@ pub fn app_view() -> impl IntoView {
     // });
 
     let ref_doc = &doc.clone();
-    let tabs_bar = tabview::tabbar_container(&ref_doc, piksvgstring, pikpreview, svg_preview.id());
+    let tabs_bar = tabview::tabbar_container(&ref_doc, &piksvgstring, &pikpreview, svg_preview.id());
 
     // should be a dyn stack to adjust or react to the new value
     let ed = editor.id();
