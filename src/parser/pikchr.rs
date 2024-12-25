@@ -20,14 +20,18 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
   let svgstr = match pikrendr {
     Ok(p) => p.rendered().to_owned(),
     Err(e) => {
-      format!(
-        r#"
-  <svg xmlns='http://www.w3.org/2000/svg'/>
-  <text><![CDATA[{}]]</text>
-  "#, e.as_str())
+      if !e.starts_with("<!-- empty pikchr diagram -->") {
+        format!(
+          r#"
+    <svg xmlns='http://www.w3.org/2000/svg'/>
+    <text><![CDATA[{}]]</text>
+    "#, e.as_str())
+      } else {
+        e.as_str().to_owned()
+      }
     }
   };
-  println!("{}", svgstr);
+  println!("svgstring before image processing {}", svgstr);
   let prev_width = if i_width > 0.0 {
     Some(i_width)
   } else {

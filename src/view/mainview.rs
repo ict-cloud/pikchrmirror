@@ -7,6 +7,7 @@ use editor::text::{default_dark_color, SimpleStyling};
 use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
+use floem::views::editor::core::buffer::rope_text::RopeText;
 use crate::img::png;
 use crate::parser::pikchr::{pik_preview_width, pik_svgstring};
 use crate::view::tabview;
@@ -23,9 +24,7 @@ const CONTENT_PADDING: f64 = 10.0;
 
 pub fn app_view() -> impl IntoView {
 
-    let (s, e) = pik_svgstring("", "");
-    log::debug!("Initial render error: {}", e);
-    let piksvgstring = create_rw_signal(s);
+    let rawdocstr = create_rw_signal(DFLT_TEXT.to_string());
 
     let p: Vec<u8> = Vec::new();
 
@@ -45,8 +44,12 @@ pub fn app_view() -> impl IntoView {
             }
             CommandExecuted::No
         })
-        .update(move |_dlta| {
-            log::debug!("Editor changed");
+        .update(move |dlta| {
+            // will crash with empty editor
+            let txt  = String::from(dlta.editor.unwrap().text().clone());
+            //let txt = dlta.deltas().
+            log::debug!("Editor changed \n new value: {:?}", txt);
+            rawdocstr.set(txt);
             // let txt = dlta.editor.unwrap().text().clone();
             // let rawtext = txt.to_string();
             // println!("{:?}", rawtext);
@@ -75,7 +78,7 @@ pub fn app_view() -> impl IntoView {
     let svg_preview = dyn_container(
         move || pikpreview.get(),
         move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
-    ).scroll().style(|s| s.max_width_pct(50.0).height_full());
+      ).scroll().style(|s| s.max_width_pct(50.0).height_full());
 
     // let tabs_bar = container((
     //     button("Render").action({
@@ -124,17 +127,16 @@ pub fn app_view() -> impl IntoView {
     //         .border_bottom(1)
     //         .border_color(Color::rgb8(205, 205, 205))
     // });
-
+    // doc needs to be dynamic to handover to the function otherwise it will not react on changes.
     let ref_doc = &doc.clone();
-    let tabs_bar = tabview::tabbar_container(&ref_doc, &piksvgstring, &pikpreview, svg_preview.id());
+    let tabs_bar = tabview::tabbar_container(&ref_doc, &rawdocstr, &pikpreview, svg_preview.id());
 
     // should be a dyn stack to adjust or react to the new value
-    let ed = editor.id();
     let piked = stack((
         editor,
         svg_preview,
-    ))
-    .style(|s| s.flex_row().width_full().items_center().justify_center());
+      ))
+      .style(|s| s.flex_row().width_full().items_center().justify_center());
 
     let id = piked.id();
     let inspector = button("Open Inspector")
@@ -145,20 +147,12 @@ pub fn app_view() -> impl IntoView {
         piked,
         tabs_bar,
         inspector,
-    ))
-    .style(|s| s.size_full().flex_col().items_center().justify_center());
-
-    //let preview_width = editor.view_style().expect("valid style").get(Width);
-    let preview_width = ed.get_content_rect();
-    //let preview_width = editor.id().inspect();
-    println!("Preview Width {:?}", preview_width.width());
-
-    let (s, _) = pik_svgstring(DFLT_TEXT, piksvgstring.get_untracked().as_str());
-    piksvgstring.set(s);
+      ))
+      .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
     view.on_key_up(Key::Named(NamedKey::F11), |m| m.is_empty(), move |_| {
         id.inspect()
-    })
+      })
 
 }

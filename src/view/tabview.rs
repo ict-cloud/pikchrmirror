@@ -9,23 +9,19 @@ const TABBAR_HEIGHT: f64 = 37.0;
 const CONTENT_PADDING: f64 = 10.0;
 
 fn render_button(
-  i_txt: String, 
-  i_svgstr: &RwSignal<String>,
+  i_rawstr: &RwSignal<String>,
   i_pngprev: &RwSignal<Vec<u8>>,
   i_preview_id: ViewId
 ) -> Button {
   button("Render").action({
     let lpreview_id = i_preview_id.clone();
-    let ltxt = i_txt.clone();
     let lpngprev = i_pngprev.clone();
-    let l_svgstr = i_svgstr.clone();
+    let l_svgstr = i_rawstr.clone();
     move || {
     log::debug!("Render Button clicked");
-    println!("ltxt: {}", ltxt);
-    let b = pik_preview_width(&ltxt, lpreview_id.get_content_rect().width());
-    let (i, e) = pik_svgstring(&ltxt, l_svgstr.get_untracked().as_str());
-    log::warn!("errtext: {}", e);
-    l_svgstr.set(i);
+    let b = pik_preview_width(l_svgstr.get_untracked().as_str(), lpreview_id.get_content_rect().width());
+    //let (_, e) = pik_svgstring(&ltxt, l_svgstr.get_untracked().as_str());
+    //log::warn!("errtext: {}", e);
     lpngprev.set(b);
   }})
 }
@@ -47,12 +43,11 @@ fn save_button(i_svgstr: RwSignal<String>) -> Button {
 
 pub fn tabbar_container(
   i_doc: &Rc<dyn Document>, 
-  i_pikstr: &RwSignal<String>,
+  i_rawstr: &RwSignal<String>,
   i_pngpreview: &RwSignal<Vec<u8>>, 
   i_preview_id: ViewId
 ) -> impl IntoView {
-  let doctxt: String = i_doc.text().into();
-  let render = render_button(doctxt, i_pikstr, i_pngpreview, i_preview_id);
+  let render = render_button(i_rawstr, i_pngpreview, i_preview_id);
   let clear = clear_button(i_doc);
   //let save = save_button(i_pikstr);
   container((
