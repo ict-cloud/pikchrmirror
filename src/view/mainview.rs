@@ -8,6 +8,7 @@ use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
 use floem::views::editor::core::buffer::rope_text::RopeText;
+use pikchr::raw;
 use crate::img::png;
 use crate::parser::pikchr::{pik_preview_width, pik_svgstring};
 use crate::view::tabview;
@@ -46,16 +47,14 @@ pub fn app_view() -> impl IntoView {
         })
         .update(move |dlta| {
             // will crash with empty editor
-            let txt  = String::from(dlta.editor.unwrap().text().clone());
-            //let txt = dlta.deltas().
-            log::debug!("Editor changed \n new value: {:?}", txt);
-            rawdocstr.set(txt);
-            // let txt = dlta.editor.unwrap().text().clone();
-            // let rawtext = txt.to_string();
-            // println!("{:?}", rawtext);
-            // let (i, e) = pik_svgstring(&rawtext, piksvgstring.get().as_str());
-            // println!("errtext: {}", e);
-            // piksvgstring.set(i);
+            let txt = dlta.deltas().last().unwrap();
+            log::debug!("Editor changed \n new delta: {:?}", txt);
+            let rawdoc = if txt.new_document_len() == 0 {
+                String::from("")
+            } else {
+                String::from(dlta.editor.unwrap().text().clone())
+            };
+            rawdocstr.set(rawdoc);
         })
         .placeholder("Some placeholder text");
     let doc = editor.doc();
