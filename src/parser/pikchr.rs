@@ -19,6 +19,7 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
   "#;
   let svgstr = match pikrendr {
     Ok(p) => p.rendered().to_owned(),
+    // this will not display as proper svg
     Err(e) => {
       if !e.starts_with("<!-- empty pikchr diagram -->") {
         format!(

@@ -1,16 +1,8 @@
 use floem::prelude::*;
 use editor::command::{Command, CommandExecuted};
 use editor::core::command::EditCommand;
-use editor::core::editor::EditType;
-use editor::core::selection::Selection;
 use editor::text::{default_dark_color, SimpleStyling};
-use floem::action::save_as;
-use floem::file::FileDialogOptions;
 use floem::keyboard::{Key, NamedKey};
-use floem::views::editor::core::buffer::rope_text::RopeText;
-use pikchr::raw;
-use crate::img::png;
-use crate::parser::pikchr::{pik_preview_width, pik_svgstring};
 use crate::view::tabview;
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
@@ -19,9 +11,6 @@ arrow right 200% "HTML+SVG" "Output"
 arrow <-> down 70% from last box.s
 box same "Pikchr" "Formatter" "(pikchr.c)" fit
 "#;
-
-const TABBAR_HEIGHT: f64 = 37.0;
-const CONTENT_PADDING: f64 = 10.0;
 
 pub fn app_view() -> impl IntoView {
 
@@ -46,7 +35,6 @@ pub fn app_view() -> impl IntoView {
             CommandExecuted::No
         })
         .update(move |dlta| {
-            // will crash with empty editor
             let txt = dlta.deltas().last().unwrap();
             log::debug!("Editor changed \n new delta: {:?}", txt);
             let rawdoc = if txt.new_document_len() == 0 {
@@ -77,7 +65,7 @@ pub fn app_view() -> impl IntoView {
     let svg_preview = dyn_container(
         move || pikpreview.get(),
         move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
-      ).scroll().style(|s| s.max_width_pct(50.0).height_full());
+      ).scroll().style(|s| s.max_width_pct(50.0).size_full());
 
     // let tabs_bar = container((
     //     button("Render").action({
