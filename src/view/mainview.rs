@@ -24,7 +24,7 @@ pub fn app_view() -> impl IntoView {
 
     let editor = text_editor(DFLT_TEXT)
         .styling(SimpleStyling::new())
-        .style(|s| s.size_full().max_width_pct(50.0))
+        .style(|s| s.flex_col().size_full())
         .editor_style(default_dark_color)
         .editor_style(move |s| s.hide_gutter(hide_gutter_a.get()))
         .pre_command(|ev| {
@@ -65,7 +65,7 @@ pub fn app_view() -> impl IntoView {
     let svg_preview = dyn_container(
         move || pikpreview.get(),
         move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
-      ).scroll().style(|s| s.max_width_pct(50.0).size_full());
+      ).scroll().style(|s| s.flex_col().max_width_pct(50.0).max_height_full());
 
     // let tabs_bar = container((
     //     button("Render").action({
@@ -123,7 +123,7 @@ pub fn app_view() -> impl IntoView {
         editor,
         svg_preview,
       ))
-      .style(|s| s.flex_row().width_full().items_center().justify_center());
+      .style(|s| s.flex_row().size_full().items_center().justify_center());
 
     let id = piked.id();
     let inspector = button("Open Inspector")
