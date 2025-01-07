@@ -1,5 +1,7 @@
 use pikchr::{Pikchr, PikchrFlags};
 use crate::img::png;
+use xml::escape::escape_str_attribute;
+
 
 pub fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
   let mut pik_err = String::from("");
@@ -12,7 +14,9 @@ pub fn pik_svgstring(i_raw: &str, i_svg_old: &str) -> (String, String) {
 }
 
 pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
-  let pikrendr = Pikchr::render(i_rawstr, None, PikchrFlags::default());
+  let flags = PikchrFlags::default();
+  //flags.generate_html_errors();
+  let pikrendr = Pikchr::render(i_rawstr, None, flags);
   let error_svg_tmpl = r#"
   <svg xmlns='http://www.w3.org/2000/svg'/>
   <text>{error}</text>
@@ -22,11 +26,10 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
     // this will not display as proper svg
     Err(e) => {
       if !e.starts_with("<!-- empty pikchr diagram -->") {
+        let xml_e = escape_str_attribute(&e);
+        let lstr = e.lines().collect::<Vec<&str>>().join(" ");
         format!(
-          r#"
-    <svg xmlns='http://www.w3.org/2000/svg'/>
-    <text><![CDATA[{}]]</text>
-    "#, e.as_str())
+          r#"<svg xmlns="http://www.w3.org/2000/svg"><text>{}</text></svg>"#, xml_e)
       } else {
         e.as_str().to_owned()
       }
