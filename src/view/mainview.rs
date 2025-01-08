@@ -125,15 +125,15 @@ pub fn app_view() -> impl IntoView {
       ))
       .style(|s| s.flex_row().size_full().items_center().justify_center());
 
-    let id = piked.id();
-    let inspector = button("Open Inspector")
-        .action(move || id.inspect())
-        .style(|s| s);
+    // let id = piked.id();
+    // let inspector = button("Open Inspector")
+    //     .action(move || id.inspect())
+    //     .style(|s| s);
 
     let view = stack((
         piked,
         tabs_bar,
-        inspector,
+    //    inspector,
       ))
       .style(|s| s.size_full().flex_col().items_center().justify_center());
 
