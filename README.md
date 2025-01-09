@@ -16,7 +16,8 @@ A button to render the graphic is at the bottom. And the result can be exported 
 # Libraries
 Following libraries are used to enable the main functionalities.
 
-## Floem
+## Floem
+
 [Floem](https://github.com/lapce/floem) is an UI library written in Rust originating from the [Lapce Editor](https://lapce.dev/).
 Although the library is under heavy development I decided to use it, because it offers seamless integratione accross different platforms and operations modes. So far one of the best libraries I found.
 
