@@ -67,10 +67,8 @@ pub fn app_view() -> impl IntoView {
     let piked = stack((editor, svg_preview))
         .style(|s| s.flex_row().size_full().items_center().justify_center());
 
-    let view = stack((
-        piked, tabs_bar,
-    ))
-    .style(|s| s.size_full().flex_col().items_center().justify_center());
+    let view = stack((piked, tabs_bar))
+        .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
     view.on_key_up(
