@@ -17,9 +17,9 @@ fn render_button(
     i_preview_id: ViewId,
 ) -> Button {
     button("Render").action({
-        let lpreview_id = i_preview_id.clone();
-        let lpngprev = i_pngprev.clone();
-        let l_svgstr = i_rawstr.clone();
+        let lpreview_id = i_preview_id;
+        let lpngprev = *i_pngprev;
+        let l_svgstr = *i_rawstr;
         move || {
             log::debug!("Render Button clicked");
             let b = pik_preview_width(
@@ -71,7 +71,7 @@ pub fn tabbar_container(
 ) -> impl IntoView {
     let render = render_button(i_rawstr, i_pngpreview, i_preview_id);
     let clear = clear_button(i_doc);
-    let save = save_button(i_rawstr.clone());
+    let save = save_button(*i_rawstr);
     container((render, clear, save)).style(|s| {
         s.flex_row()
             .width_full()

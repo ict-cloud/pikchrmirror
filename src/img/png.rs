@@ -35,10 +35,7 @@ fn pm_from_svgstr(i_svgstr: &str, i_wsize: f64) -> Pixmap {
 }
 
 pub fn svg_to_png(i_svg: &str, i_width: Option<f64>) -> Vec<u8> {
-    let wd = match i_width {
-        Some(w) => w,
-        None => 800.0,
-    };
+    let wd = i_width.unwrap_or(800.0);
     let pm = pm_from_svgstr(i_svg, wd);
     pm.encode_png().expect("PNG encoded")
 }

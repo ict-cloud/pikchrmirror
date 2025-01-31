@@ -46,18 +46,6 @@ pub fn app_view() -> impl IntoView {
         .placeholder("Some placeholder text");
     let doc = editor.doc();
 
-    // let svg_result = dyn_container(
-    //     move || piksvgstring.get(),
-    //     move |pkchr| svg(pkchr)
-    //         .style(|s| s.size_full().flex().set(SvgColor, Brush::Solid(Color::BLACK)))
-    //     )
-    //     .style(|s| s.size_full());
-
-    //let preview_width = editor.view_style().expect("valid style").get(Width);
-    //let preview_width = editor.id().get_content_rect();
-    //let preview_width = editor.id().inspect();
-    //println!("Preview Width {:?}", preview_width.width());
-
     // preview png should be rendered behind the button and stored in a rw_signal
     // the save version should then be rendered dedicated with another size
 
@@ -71,69 +59,16 @@ pub fn app_view() -> impl IntoView {
     .scroll()
     .style(|s| s.flex_col().max_width_pct(50.0).max_height_full());
 
-    // let tabs_bar = container((
-    //     button("Render").action({
-    //         let preview_id = svg_preview.id();
-    //         let ldoc = doc.clone();
-    //         move || {
-    //         log::debug!("Render Button clicked");
-    //         log::debug!("Preview With Render: {}", preview_id.get_content_rect().width());
-    //         let txt: String = ldoc.text().into();
-    //         // calculate the preview here and load the picture in a rw_signal
-    //         let b = pik_preview_width(&txt, preview_id.get_content_rect().width());
-    //         let (i, e) = pik_svgstring(&txt, piksvgstring.get_untracked().as_str());
-    //         log::warn!("errtext: {}", e);
-    //         piksvgstring.set(i);
-    //         pikpreview.set(b);
-    //     }}),
-    //     button("Clear").action(move || {
-    //         doc.edit_single(
-    //             Selection::region(0, doc.text().len()),
-    //             "",
-    //             EditType::DeleteSelection,
-    //         );
-    //     }),
-    //     button("Save PNG").action(move ||{
-    //         log::debug!("Save PNG clicked");
-    //         save_as(
-    //             FileDialogOptions::new()
-    //                 .default_name("pikchr.png")
-    //                 .title("Save file"),
-    //             move |file_info| {
-    //                 if let Some(file) = file_info {
-    //                     log::debug!("Save file to: {:?}", file.path);
-    //                     png::svgstr_to_pngfile(piksvgstring.get().as_str(), file.path[0].as_os_str().to_str().expect("valid path"));
-    //                 }
-    //             },
-    //         );
-
-    //     }),
-    //     ))
-    // .style(|s| {
-    //     s.flex_row()
-    //         .width_full()
-    //         .height(TABBAR_HEIGHT)
-    //         .row_gap(5)
-    //         .padding(CONTENT_PADDING)
-    //         .border_bottom(1)
-    //         .border_color(Color::rgb8(205, 205, 205))
-    // });
     // doc needs to be dynamic to handover to the function otherwise it will not react on changes.
     let ref_doc = &doc.clone();
-    let tabs_bar = tabview::tabbar_container(&ref_doc, &rawdocstr, &pikpreview, svg_preview.id());
+    let tabs_bar = tabview::tabbar_container(ref_doc, &rawdocstr, &pikpreview, svg_preview.id());
 
     // should be a dyn stack to adjust or react to the new value
     let piked = stack((editor, svg_preview))
         .style(|s| s.flex_row().size_full().items_center().justify_center());
 
-    // let id = piked.id();
-    // let inspector = button("Open Inspector")
-    //     .action(move || id.inspect())
-    //     .style(|s| s);
-
     let view = stack((
         piked, tabs_bar,
-        //    inspector,
     ))
     .style(|s| s.size_full().flex_col().items_center().justify_center());
 
