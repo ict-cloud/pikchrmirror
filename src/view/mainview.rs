@@ -1,9 +1,9 @@
-use floem::prelude::*;
+use crate::view::tabview;
 use editor::command::{Command, CommandExecuted};
 use editor::core::command::EditCommand;
 use editor::text::{default_dark_color, SimpleStyling};
 use floem::keyboard::{Key, NamedKey};
-use crate::view::tabview;
+use floem::prelude::*;
 
 const DFLT_TEXT: &str = r#"arrow right 200% "Markdown" "Source"
 box rad 10px "Markdown" "Formatter" "(markdown.c)" fit
@@ -13,7 +13,6 @@ box same "Pikchr" "Formatter" "(pikchr.c)" fit
 "#;
 
 pub fn app_view() -> impl IntoView {
-
     let rawdocstr = create_rw_signal(DFLT_TEXT.to_string());
 
     let p: Vec<u8> = Vec::new();
@@ -64,8 +63,13 @@ pub fn app_view() -> impl IntoView {
 
     let svg_preview = dyn_container(
         move || pikpreview.get(),
-        move |pv| { let pv_ref = pv.clone(); img(move ||pv_ref.to_vec()).style(|s|s.max_width_pct(100.0))} // scaling needs to be dynamic to adapt the dyn_container
-      ).scroll().style(|s| s.flex_col().max_width_pct(50.0).max_height_full());
+        move |pv| {
+            let pv_ref = pv.clone();
+            img(move || pv_ref.to_vec()).style(|s| s.max_width_pct(100.0))
+        }, // scaling needs to be dynamic to adapt the dyn_container
+    )
+    .scroll()
+    .style(|s| s.flex_col().max_width_pct(50.0).max_height_full());
 
     // let tabs_bar = container((
     //     button("Render").action({
@@ -102,7 +106,7 @@ pub fn app_view() -> impl IntoView {
     //                 }
     //             },
     //         );
-            
+
     //     }),
     //     ))
     // .style(|s| {
@@ -119,11 +123,8 @@ pub fn app_view() -> impl IntoView {
     let tabs_bar = tabview::tabbar_container(&ref_doc, &rawdocstr, &pikpreview, svg_preview.id());
 
     // should be a dyn stack to adjust or react to the new value
-    let piked = stack((
-        editor,
-        svg_preview,
-      ))
-      .style(|s| s.flex_row().size_full().items_center().justify_center());
+    let piked = stack((editor, svg_preview))
+        .style(|s| s.flex_row().size_full().items_center().justify_center());
 
     // let id = piked.id();
     // let inspector = button("Open Inspector")
@@ -131,15 +132,15 @@ pub fn app_view() -> impl IntoView {
     //     .style(|s| s);
 
     let view = stack((
-        piked,
-        tabs_bar,
-    //    inspector,
-      ))
-      .style(|s| s.size_full().flex_col().items_center().justify_center());
+        piked, tabs_bar,
+        //    inspector,
+    ))
+    .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
-    view.on_key_up(Key::Named(NamedKey::F11), |m| m.is_empty(), move |_| {
-        id.inspect()
-      })
-
+    view.on_key_up(
+        Key::Named(NamedKey::F11),
+        |m| m.is_empty(),
+        move |_| id.inspect(),
+    )
 }
