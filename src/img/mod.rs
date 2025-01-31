@@ -1,4 +1,4 @@
 pub mod png;
 
-#[cfg(test)] 
+#[cfg(test)]
 pub mod tests;
