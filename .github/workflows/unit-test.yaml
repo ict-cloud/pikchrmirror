@@ -1,9 +1,10 @@
-name: Cargo Unit Tests
+name: Pikchr Unit Tests
 
 on:
   push:
-    #branches: 
-    #- !main   # adjust to your desired branch
+    branches: 
+    - !main   # uses the test on pull request
+    - !develop # uses the test on pull request
 
 jobs:
   test:
