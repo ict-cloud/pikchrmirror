@@ -27,6 +27,7 @@ fn render_button(
                 lpreview_id.get_content_rect().width(),
             );
             lpngprev.set(b);
+            lpreview_id.request_all();
         }
     })
 }

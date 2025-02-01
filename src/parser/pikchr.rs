@@ -38,7 +38,7 @@ pub fn pik_preview_width(i_rawstr: &str, i_width: f64) -> Vec<u8> {
             }
         }
     };
-    println!("svgstring before image processing {}", svgstr);
+    log::debug!("svgstring before image processing {}", svgstr);
     let prev_width = if i_width > 0.0 { Some(i_width) } else { None };
     png::svg_to_png(&svgstr, prev_width)
 }
