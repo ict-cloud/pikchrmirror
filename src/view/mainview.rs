@@ -53,11 +53,11 @@ pub fn app_view() -> impl IntoView {
         move || pikpreview.get(),
         move |pv| {
             let pv_ref = pv.clone();
-            img(move || pv_ref.to_vec()).style(|s| s.max_width_pct(100.0))
+            img(move || pv_ref.to_vec())
         }, // scaling needs to be dynamic to adapt the dyn_container
     )
     .scroll()
-    .style(|s| s.flex_col().max_width_pct(50.0).max_height_full());
+    .style(|s| s.flex_col().size_full());
 
     // doc needs to be dynamic to handover to the function otherwise it will not react on changes.
     let ref_doc = &doc.clone();

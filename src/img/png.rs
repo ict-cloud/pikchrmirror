@@ -35,6 +35,7 @@ fn pm_from_svgstr(i_svgstr: &str, i_wsize: f64) -> Pixmap {
 }
 
 pub fn svg_to_png(i_svg: &str, i_width: Option<f64>) -> Vec<u8> {
+    log::debug!("svg_to_png, i_width: {:?}", i_width);
     let wd = i_width.unwrap_or(800.0);
     let pm = pm_from_svgstr(i_svg, wd);
     pm.encode_png().expect("PNG encoded")

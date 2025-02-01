@@ -5,6 +5,7 @@ use editor::core::selection::Selection;
 use floem::action::save_as;
 use floem::file::FileDialogOptions;
 use floem::prelude::editor::text::Document;
+use floem::taffy::Rect;
 use floem::{prelude::*, ViewId};
 use std::rc::Rc;
 
@@ -27,6 +28,7 @@ fn render_button(
                 lpreview_id.get_content_rect().width(),
             );
             lpngprev.set(b);
+            lpreview_id.request_all();
         }
     })
 }
