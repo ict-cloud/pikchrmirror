@@ -1,4 +1,4 @@
-use crate::view::{tabview, svgview, edview};
+use crate::view::{edview, svgview, tabview};
 use floem::keyboard::{Key, NamedKey};
 use floem::prelude::*;
 
@@ -11,29 +11,6 @@ pub fn app_view() -> impl IntoView {
 
     let editor = edview::textedit_view(&rawdocstr);
 
-    // let editor = text_editor(DFLT_TEXT)
-    //     .styling(SimpleStyling::new())
-    //     .style(|s| s.flex_col().size_full())
-    //     .editor_style(default_dark_color)
-    //     .editor_style(move |s| s.hide_gutter(hide_gutter_a.get()))
-    //     .pre_command(|ev| {
-    //         if matches!(ev.cmd, Command::Edit(EditCommand::Undo)) {
-    //             println!("Undo command executed on editor B, ignoring!");
-    //             return CommandExecuted::Yes;
-    //         }
-    //         CommandExecuted::No
-    //     })
-    //     .update(move |dlta| {
-    //         let txt = dlta.deltas().last().unwrap();
-    //         log::debug!("Editor changed \n new delta: {:?}", txt);
-    //         let rawdoc = if txt.new_document_len() == 0 {
-    //             String::from("")
-    //         } else {
-    //             String::from(dlta.editor.unwrap().text().clone())
-    //         };
-    //         rawdocstr.set(rawdoc);
-    //     })
-    //     .placeholder("Some placeholder text");
     let doc = editor.doc();
 
     // preview png should be rendered behind the button and stored in a rw_signal

@@ -10,10 +10,7 @@ arrow <-> down 70% from last box.s
 box same "Pikchr" "Formatter" "(pikchr.c)" fit
 "#;
 
-pub fn textedit_view(
-    i_editorstring: &RwSignal<String>
-) -> TextEditor {
-
+pub fn textedit_view(i_editorstring: &RwSignal<String>) -> TextEditor {
     let hide_gutter_a = RwSignal::new(false);
     let rawdocstr = *i_editorstring;
 
