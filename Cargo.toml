@@ -1,6 +1,6 @@
 [package]
 name = "PikchrMirror"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
@@ -16,3 +16,9 @@ version = "0.44.*"
 git = "https://github.com/lapce/floem"
 # rev = "b9bcd24"
 features = ["editor", "default-image-formats", "rfd-async-std"]
+
+[profile.release]
+opt-level = "s" # or "z"
+codegen-units = 1
+lto = "thin" #alternatives "fat" or "false"
+strip = "debuginfo"
