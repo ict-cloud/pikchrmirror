@@ -1,6 +1,6 @@
 [package]
 name = "PikchrMirror"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [dependencies]
@@ -10,7 +10,7 @@ pretty_env_logger = "0.5.*"
 xml-rs = "0.8.*"
 
 [dependencies.resvg]
-version = "0.44.*"
+version = "0.45.*"
 
 [dependencies.floem]
 git = "https://github.com/lapce/floem"
