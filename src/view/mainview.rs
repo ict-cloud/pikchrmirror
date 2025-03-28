@@ -30,6 +30,10 @@ pub fn app_view() -> impl IntoView {
         .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
+
+    // view title
+    let view = view.window_title(||String::from("PikchrMirror"));
+
     view.on_key_up(
         Key::Named(NamedKey::F11),
         |m| m.is_empty(),
