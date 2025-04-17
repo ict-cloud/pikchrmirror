@@ -1,4 +1,4 @@
-use crate::view::{edview, svgview, tabview};
+use crate::view::{edview, svgview, tabview, navbarview};
 use floem::keyboard::{Key, NamedKey};
 use floem::prelude::*;
 
@@ -26,7 +26,7 @@ pub fn app_view() -> impl IntoView {
     let piked = stack((editor, svg_preview))
         .style(|s| s.flex_row().size_full().items_center().justify_center());
 
-    let view = stack((piked, tabs_bar))
+    let view = stack((navbarview::navbar(), piked, tabs_bar))
         .style(|s| s.size_full().flex_col().items_center().justify_center());
 
     let id = view.id();
