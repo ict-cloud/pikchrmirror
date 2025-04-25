@@ -69,15 +69,15 @@ pub fn tabbar_container(
     i_rawstr: &RwSignal<String>,
     i_pngpreview: &RwSignal<Vec<u8>>,
     i_preview_id: ViewId,
-) -> Container {
+) -> impl IntoView {
     let render = render_button(i_rawstr, i_pngpreview, i_preview_id);
     let clear = clear_button(i_doc);
     let save = save_button(*i_rawstr);
-    container((render, clear, save)).style(|s| {
+    h_stack((render, clear, save)).style(|s| {
         s.flex_row()
             .width_full()
             .height(TABBAR_HEIGHT)
-            .row_gap(5)
+            .col_gap(5)
             .padding(CONTENT_PADDING)
             .border_bottom(1)
             .border_color(Color::from_rgb8(205, 205, 205))
