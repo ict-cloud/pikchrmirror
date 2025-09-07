@@ -1,4 +1,4 @@
-name: Pikchr Tests
+name: "Pikchr Tests"
 
 on:
   pull_request:

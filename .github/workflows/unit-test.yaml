@@ -1,4 +1,4 @@
-name: Pikchr Unit Tests
+name: "Pikchr Unit Tests"
 
 on:
   push:
