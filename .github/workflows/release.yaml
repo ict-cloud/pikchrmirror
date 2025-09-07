@@ -17,7 +17,7 @@ jobs:
       pkg-version: ${{ steps.pkg-version.outputs.PKG_VERSION }} 
     steps:
       - name: "Check out the repo"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -34,7 +34,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       
       - name: "Create release"
         uses: "taiki-e/create-gh-release-action@v1"
@@ -63,7 +63,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: "Check out the repo"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: "Upload Binaries"
         uses: "taiki-e/upload-rust-binary-action@v1"
