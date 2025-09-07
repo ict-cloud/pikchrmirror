@@ -3,8 +3,8 @@ name: Pikchr Unit Tests
 on:
   push:
     branches: 
-    - !main   # uses the test on pull request
-    - !develop # uses the test on pull request
+    - '!main'   # uses the test on pull request
+    - '!develop' # uses the test on pull request
 
 jobs:
   test:
