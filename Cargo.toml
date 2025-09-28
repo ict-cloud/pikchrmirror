@@ -12,10 +12,11 @@ xml-rs = "1.0.*"
 [dependencies.resvg]
 version = "0.45.*"
 
-[dependencies.floem]
-git = "https://github.com/lapce/floem"
-# rev = "b9bcd24"
-features = ["editor", "default-image-formats", "rfd-async-std"]
+[dependencies.iced]
+version = "0.10"
+
+[dependencies.iced_wgpu]
+version = "0.11"
 
 [profile.release]
 opt-level = "s" # or "z"
