@@ -2,16 +2,14 @@ mod img;
 mod parser;
 
 use iced::widget::{column, row, text, text_input, container};
-use iced::{Application, Command, Element, Settings, Theme, Length};
+use iced::application::{Application, Settings};
+use iced::{Command, Element, Theme, Length};
 
 #[cfg(test)]
 mod tests;
 
 pub fn main() -> iced::Result {
-    MirrorApp::run(Settings {
-        antialiasing: true,
-        ..Settings::default()
-    })
+    MirrorApp::run(Settings::default())
 }
 
 struct MirrorApp {
@@ -25,12 +23,12 @@ enum Message {
 }
 
 impl Application for MirrorApp {
-    type Executor = iced::executor::Default;
     type Message = Message;
     type Theme = Theme;
+    type Executor = iced::executor::Default;
     type Flags = ();
 
-    fn new(_flags: ()) -> (MirrorApp, Command<Message>) {
+    fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             MirrorApp {
                 text: String::from(""),
@@ -75,8 +73,3 @@ impl Application for MirrorApp {
             .center_y()
             .into()
     }
-
-    fn theme(&self) -> Theme {
-        Theme::default()
-    }
-}
