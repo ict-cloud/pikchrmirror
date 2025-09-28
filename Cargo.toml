@@ -13,10 +13,10 @@ xml-rs = "1.0.*"
 version = "0.45.*"
 
 [dependencies.iced]
-version = "0.10"
+version = "0.13.*"
 
 [dependencies.iced_wgpu]
-version = "0.11"
+version = "0.13.*"
 
 [profile.release]
 opt-level = "s" # or "z"
