@@ -14,6 +14,7 @@ version = "0.45.*"
 
 [dependencies.iced]
 version = "0.13.*"
+features = ["svg", "highlighter"]
 
 [dependencies.iced_wgpu]
 version = "0.13.*"

@@ -1,20 +1,21 @@
 mod img;
 mod parser;
 
-use iced::widget::{column, row, text, text_input, container};
-use iced::application::{Application, Settings};
-use iced::{Command, Element, Theme, Length};
+use iced::highlighter;
+use iced::widget::{column, container, row, svg, text, text_input};
+use iced::{executor, Application, Element, Length, Settings, Task, Theme};
 
 #[cfg(test)]
 mod tests;
 
 pub fn main() -> iced::Result {
-    MirrorApp::run(Settings::default())
+    iced::application(MirrorApp::new, MirrorApp::update, MirrorApp::view).run()
 }
 
 struct MirrorApp {
     text: String,
     svg: String,
+    error: String,
 }
 
 #[derive(Debug, Clone)]
@@ -22,19 +23,21 @@ enum Message {
     TextInputChanged(String),
 }
 
-impl Application for MirrorApp {
-    type Message = Message;
-    type Theme = Theme;
-    type Executor = iced::executor::Default;
-    type Flags = ();
+impl MirrorApp {
+    fn new(&self) -> (Self, Task<Message>) {
+        let initial_text = r##"arrow right 200% "Markdown" "HTML" box rad 10px "Markdown" "(markdown.c)" fit
+arrow right 200% "HTML" "pikchr" box rad 10px "HTML" "(pikchr.c)" fit
+arrow right 200% "pikchr" "SVG" box rad 10px "pikchr" "(cgi/pikchr.c)" fit
+"##;
+        let (svg, error) = parser::pikchr::pik_svgstring(initial_text, "");
 
-    fn new(_flags: ()) -> (Self, Command<Message>) {
         (
-            MirrorApp {
-                text: String::from(""),
-                svg: String::from(""),
+            Self {
+                text: String::from(initial_text),
+                svg,
+                error,
             },
-            Command::none(),
+            Task::none(),
         )
     }
 
@@ -42,34 +45,40 @@ impl Application for MirrorApp {
         String::from("PikchrMirror")
     }
 
-    fn update(&mut self, message: Message) -> Command<Message> {
+    fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::TextInputChanged(text) => {
                 self.text = text;
-                // TODO: Generate SVG from text using pikchr and resvg
-                self.svg = String::from("<svg width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"40\" stroke=\"green\" stroke-width=\"4\" fill=\"yellow\" /></svg>");
-                Command::none()
+                let (svg, error) = parser::pikchr::pik_svgstring(&self.text, &self.svg);
+                self.svg = svg;
+                self.error = error;
+                Task::none()
             }
         }
     }
 
     fn view(&self) -> Element<Message> {
-        let editor = text_input("Enter Pikchr code", &self.text)
-            .on_input(Message::TextInputChanged);
+        let editor =
+            text_input("Enter Pikchr code", &self.text).on_input(Message::TextInputChanged);
 
-        let svg_display = text(&self.svg); // Replace with actual SVG rendering
+        let svg_handle = svg::Handle::from_memory(self.svg.clone());
+        let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
 
         let content = row![
-            editor.width(Length::FillPortion(1)),
-            container(svg_display)
-                .width(Length::FillPortion(1))
+            column![editor].width(Length::FillPortion(1)),
+            column![
+                container(svg_display)
+                    .width(Length::Fill)
+                    .height(Length::Fill),
+                text(&self.error)
+            ]
+            .width(Length::FillPortion(1))
         ];
 
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(20)
-            .center_x()
-            .center_y()
             .into()
     }
+}
