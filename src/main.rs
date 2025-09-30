@@ -1,19 +1,20 @@
 mod img;
 mod parser;
 
-use iced::widget::{column, container, row, svg, text, text_input};
-use iced::{Element, Length, Task};
+use iced::widget::{column, container, row, svg, text, text_editor, text_input};
+use iced::{Element, Fill, Length, Task};
 
 #[cfg(test)]
 mod tests;
 
 pub fn main() -> iced::Result {
-    iced::run("Pikchr Mirror", MirrorApp::update, MirrorApp::view)
+    iced::application(MirrorApp::title, MirrorApp::update, MirrorApp::view).run()
 }
 
 #[derive(Default)]
 struct MirrorApp {
     text: String,
+    content: text_editor::Content,
     svg: String,
     error: String,
 }
@@ -21,6 +22,7 @@ struct MirrorApp {
 #[derive(Debug, Clone)]
 enum Message {
     TextInputChanged(String),
+    TextEditorAction(text_editor::Action),
 }
 
 impl MirrorApp {
@@ -34,6 +36,7 @@ arrow right 200% "pikchr" "SVG" box rad 10px "pikchr" "(cgi/pikchr.c)" fit
         (
             Self {
                 text: String::from(initial_text),
+                content: text_editor::Content::new(),
                 svg,
                 error,
             },
@@ -54,12 +57,22 @@ arrow right 200% "pikchr" "SVG" box rad 10px "pikchr" "(cgi/pikchr.c)" fit
                 self.error = error;
                 Task::none()
             }
+            Message::TextEditorAction(action) => {
+                self.content.perform(action);
+                let (svg, error) = parser::pikchr::pik_svgstring(&self.content.text(), &self.svg);
+                self.svg = svg;
+                self.error = error;
+
+                Task::none()
+            }
         }
     }
 
     fn view(&self) -> Element<Message> {
-        let editor =
-            text_input("Enter Pikchr code", &self.text).on_input(Message::TextInputChanged);
+        let editor = text_editor(&self.content)
+            .height(Fill)
+            .wrapping(text::Wrapping::Word)
+            .on_action(Message::TextEditorAction);
 
         let svg_handle = svg::Handle::from_memory(self.svg.as_bytes().to_vec());
         let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
