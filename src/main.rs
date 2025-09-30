@@ -1,17 +1,17 @@
 mod img;
 mod parser;
 
-use iced::highlighter;
 use iced::widget::{column, container, row, svg, text, text_input};
-use iced::{executor, Application, Element, Length, Settings, Task, Theme};
+use iced::{Element, Length, Task};
 
 #[cfg(test)]
 mod tests;
 
 pub fn main() -> iced::Result {
-    iced::application(MirrorApp::new, MirrorApp::update, MirrorApp::view).run()
+    iced::run("Pikchr Mirror", MirrorApp::update, MirrorApp::view)
 }
 
+#[derive(Default)]
 struct MirrorApp {
     text: String,
     svg: String,
@@ -61,7 +61,7 @@ arrow right 200% "pikchr" "SVG" box rad 10px "pikchr" "(cgi/pikchr.c)" fit
         let editor =
             text_input("Enter Pikchr code", &self.text).on_input(Message::TextInputChanged);
 
-        let svg_handle = svg::Handle::from_memory(self.svg.clone());
+        let svg_handle = svg::Handle::from_memory(self.svg.as_bytes().to_vec());
         let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
 
         let content = row![
