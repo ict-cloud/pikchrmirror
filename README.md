@@ -18,8 +18,8 @@ Following libraries are used to enable the main functionalities.
 
 ## Floem
 
-[Floem](https://github.com/lapce/floem) is an UI library written in Rust originating from the [Lapce Editor](https://lapce.dev/).
-Although the library is under heavy development I decided to use it, because it offers seamless integratione accross different platforms and operations modes. So far one of the best libraries I found.
+[iced](https://github.com/iced-rs/iced/) is an UI library written in Rust originating.
+The library is widely adapted and part of bigger products. Previously I used [Floem](https://github.com/lapce/floem) from the [Lapce Editor](https://lapce.dev/), but could not get all functions to work.
 
 ## Pikchr
 This is a simple wrapper around the official Pikchr library. Documented under https://docs.rs/pikchr/latest/pikchr/.

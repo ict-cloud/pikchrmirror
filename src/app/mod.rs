@@ -1,0 +1,32 @@
+use iced::widget::text_editor;
+use iced::{Element, Fill, Length, Task};
+
+pub mod message;
+//pub mod model;
+pub mod update;
+pub mod view;
+
+pub use message::Message;
+//pub use model::MirrorApp;
+
+#[derive(Default)]
+pub struct MirrorApp {
+    pub text: String,
+    pub content: text_editor::Content,
+    pub svg: String,
+    pub error: String,
+}
+
+impl MirrorApp {
+    pub fn title(&self) -> String {
+        String::from("PikchrMirror")
+    }
+
+    pub fn update(&mut self, message: Message) -> Task<Message> {
+        update::update(self, message)
+    }
+
+    pub fn view(&self) -> Element<Message> {
+        view::view(&self)
+    }
+}
