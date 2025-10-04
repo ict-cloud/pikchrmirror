@@ -1,6 +1,6 @@
 use super::{Message, MirrorApp};
-use iced::widget::{column, container, row, svg, text, text_editor, text_input};
-use iced::{Element, Fill, Length, Task};
+use iced::widget::{column, container, row, svg, text, text_editor};
+use iced::{Element, Fill, Length};
 
 pub fn view(model: &MirrorApp) -> Element<Message> {
     let editor = text_editor(&model.content)
