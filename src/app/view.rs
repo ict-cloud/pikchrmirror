@@ -1,12 +1,10 @@
 use super::{Message, MirrorApp};
-use iced::widget::{column, container, row, svg, text, text_editor};
+use crate::components::editor::text_editor_component;
+use iced::widget::{column, container, row, svg, text};
 use iced::{Element, Fill, Length};
 
 pub fn view(model: &MirrorApp) -> Element<Message> {
-    let editor = text_editor(&model.content)
-        .height(Fill)
-        .wrapping(text::Wrapping::Word)
-        .on_action(Message::TextEditorAction);
+    let editor = text_editor_component(&model.content, Message::TextEditorAction);
 
     let svg_handle = svg::Handle::from_memory(model.svg.as_bytes().to_vec());
     let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
