@@ -19,5 +19,8 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
 
             Task::none()
         }
+        Message::NewFile => Task::none(),
+        Message::OpenFile => Task::none(),
+        Message::SaveFile => Task::none(),
     }
 }

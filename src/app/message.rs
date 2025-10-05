@@ -4,4 +4,7 @@ use iced::widget::text_editor::Action;
 pub enum Message {
     TextInputChanged(String),
     TextEditorAction(Action),
+    NewFile,
+    OpenFile,
+    SaveFile,
 }
