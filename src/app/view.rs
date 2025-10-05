@@ -1,7 +1,7 @@
 use super::{Message, MirrorApp};
 use crate::components::editor::text_editor_component;
 use iced::widget::{column, container, row, svg, text};
-use iced::{Element, Fill, Length};
+use iced::{Element, Length};
 
 pub fn view(model: &MirrorApp) -> Element<Message> {
     let editor = text_editor_component(&model.content, Message::TextEditorAction);
