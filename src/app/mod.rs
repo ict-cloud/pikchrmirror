@@ -1,6 +1,6 @@
 use iced::highlighter;
 use iced::widget::text_editor;
-use iced::{Element, Task};
+use iced::{Element, Task, Theme};
 
 pub mod message;
 pub mod model;
@@ -14,6 +14,7 @@ pub struct MirrorApp {
     pub content: text_editor::Content,
     pub svg: String,
     pub error: String,
+    pub theme: highlighter::Theme,
 }
 
 impl MirrorApp {
@@ -27,5 +28,13 @@ impl MirrorApp {
 
     pub fn view(&self) -> Element<Message> {
         view::view(&self)
+    }
+
+    pub fn theme(&self) -> Theme {
+        if self.theme.is_dark() {
+            Theme::Dark
+        } else {
+            Theme::Light
+        }
     }
 }

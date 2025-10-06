@@ -19,6 +19,7 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
             content: text_editor::Content::with_text(initial_text),
             svg,
             error,
+            theme: highlighter::Theme::InspiredGitHub,
         }
     }
 }

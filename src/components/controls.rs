@@ -2,7 +2,7 @@ use super::icons;
 use crate::app::Message;
 use iced::highlighter;
 use iced::widget::{button, center, container, pick_list, row, toggler, tooltip};
-use iced::{Center, Element, Task};
+use iced::{Center, Element};
 
 pub fn controls_row() -> Element<'static, Message> {
     row![
@@ -22,16 +22,16 @@ pub fn controls_row() -> Element<'static, Message> {
             Some(Message::SaveFile)
         ),
         iced::widget::horizontal_space(),
-        // toggler(self.word_wrap)
-        //     .label("Word Wrap")
-        //     .on_toggle(Message::WordWrapToggled),
-        // pick_list(
-        //     highlighter::Theme::ALL,
-        //     Some(self.theme),
-        //     Message::ThemeSelected
-        // )
-        // .text_size(14)
-        // .padding([5, 10])
+        //toggler(self.word_wrap)
+        //    .label("Word Wrap")
+        //    .on_toggle(Message::WordWrapToggled),
+        pick_list(
+            highlighter::Theme::ALL,
+            Some(highlighter::Theme::SolarizedDark),
+            Message::ThemeSelected
+        )
+        .text_size(12)
+        .padding([4, 8])
     ]
     .spacing(10)
     .align_y(Center)
@@ -43,7 +43,7 @@ fn action<'a, Message: Clone + 'a>(
     label: &'a str,
     on_press: Option<Message>,
 ) -> Element<'a, Message> {
-    let action = button(center(content).width(30));
+    let action = button(center(content).width(30).height(30));
 
     if let Some(on_press) = on_press {
         tooltip(

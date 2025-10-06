@@ -1,4 +1,4 @@
-use iced::widget::text_editor::Action;
+use iced::{highlighter, widget::text_editor::Action};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -7,4 +7,5 @@ pub enum Message {
     NewFile,
     OpenFile,
     SaveFile,
+    ThemeSelected(highlighter::Theme),
 }

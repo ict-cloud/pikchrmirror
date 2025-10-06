@@ -1,5 +1,6 @@
 use super::{Message, MirrorApp};
 use crate::parser;
+use iced::highlighter;
 use iced::Task;
 
 pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
@@ -22,5 +23,9 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
         Message::NewFile => Task::none(),
         Message::OpenFile => Task::none(),
         Message::SaveFile => Task::none(),
+        Message::ThemeSelected(theme) => {
+            model.theme = theme;
+            Task::none()
+        }
     }
 }

@@ -11,6 +11,7 @@ mod tests;
 
 pub fn main() -> iced::Result {
     iced::application(MirrorApp::title, MirrorApp::update, MirrorApp::view)
+        .theme(MirrorApp::theme)
         .font(include_bytes!("../fonts/icons.ttf").as_slice())
         .default_font(Font::MONOSPACE)
         .run()
