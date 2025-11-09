@@ -1,6 +1,7 @@
 use super::{Message, MirrorApp};
 use crate::parser;
 use iced::highlighter;
+use iced::widget::text_editor;
 use iced::Task;
 
 pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
@@ -20,7 +21,15 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
 
             Task::none()
         }
-        Message::NewFile => Task::none(),
+        Message::NewFile => {
+            model.content = text_editor::Content::new();
+            model.text = String::new();
+            let (svg, error) = parser::pikchr::pik_svgstring(&model.content.text(), &model.svg);
+            model.svg = svg;
+            model.error = error;
+
+            Task::none()
+        }
         Message::OpenFile => Task::none(),
         Message::SaveFile => Task::none(),
         Message::ThemeSelected(theme) => {
