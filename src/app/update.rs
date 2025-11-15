@@ -1,6 +1,6 @@
 use super::{Message, MirrorApp};
+use crate::filehandler::actions;
 use crate::parser;
-use iced::highlighter;
 use iced::widget::text_editor;
 use iced::Task;
 
@@ -31,10 +31,13 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
             Task::none()
         }
         Message::OpenFile => Task::none(),
-        Message::SaveFile => Task::none(),
+        Message::SaveFile => Task::perform(actions::save_file(None, model.svg.clone()), |_| {
+            Message::FileSaved
+        }),
         Message::ThemeSelected(theme) => {
             model.theme = theme;
             Task::none()
         }
+        Message::FileSaved => Task::none(),
     }
 }

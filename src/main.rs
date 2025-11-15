@@ -1,5 +1,6 @@
 mod app;
 mod components;
+mod filehandler;
 mod img;
 mod parser;
 

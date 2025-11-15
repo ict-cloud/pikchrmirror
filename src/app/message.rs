@@ -8,4 +8,5 @@ pub enum Message {
     OpenFile,
     SaveFile,
     ThemeSelected(highlighter::Theme),
+    FileSaved,
 }
