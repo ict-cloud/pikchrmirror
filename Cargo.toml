@@ -12,14 +12,14 @@ xml-rs = "1.0.*"
 
 [dependencies.tokio]
 version = "1.48.*"
-features = ["fs"]
+features = ["fs", "rt"]
 
 [dependencies.resvg]
 version = "0.45.*"
 
 [dependencies.iced]
 version = "0.13.*"
-features = ["svg", "highlighter"]
+features = ["svg", "highlighter", "tokio"]
 
 [dependencies.iced_wgpu]
 version = "0.13.*"

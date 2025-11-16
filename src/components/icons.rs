@@ -1,6 +1,6 @@
 use crate::app::Message;
 use iced::widget::text;
-use iced::{Element, Font, Task};
+use iced::{Element, Font};
 
 pub fn new_icon<'a, Task>() -> Element<'a, Message> {
     icon('\u{0e800}')
