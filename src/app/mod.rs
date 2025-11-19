@@ -9,6 +9,9 @@ pub mod view;
 
 pub use message::Message;
 
+#[cfg(test)]
+pub mod tests;
+
 pub struct MirrorApp {
     pub text: String,
     pub content: text_editor::Content,
