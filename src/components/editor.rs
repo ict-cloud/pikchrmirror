@@ -5,7 +5,7 @@ use iced::{Element, Fill};
 pub fn text_editor_component(
     content: &text_editor::Content,
     on_action: impl Fn(text_editor::Action) -> Message + 'static,
-) -> Element<Message> {
+) -> Element<'_, Message> {
     text_editor(content)
         .height(Fill)
         .wrapping(text::Wrapping::Word)

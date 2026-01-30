@@ -1,10 +1,10 @@
 use super::icons;
 use crate::app::Message;
 use iced::highlighter;
-use iced::widget::{button, center, container, pick_list, row, toggler, tooltip};
+use iced::widget::{button, center, container, pick_list, row, tooltip};
 use iced::{Center, Element};
 
-pub fn controls_row() -> Element<'static, Message> {
+pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Message> {
     row![
         action(
             icons::new_icon::<Message>(),
@@ -27,7 +27,7 @@ pub fn controls_row() -> Element<'static, Message> {
         //    .on_toggle(Message::WordWrapToggled),
         pick_list(
             highlighter::Theme::ALL,
-            Some(highlighter::Theme::SolarizedDark),
+            Some(selected_theme),
             Message::ThemeSelected
         )
         .text_size(12)

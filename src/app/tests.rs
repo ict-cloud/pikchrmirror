@@ -172,3 +172,107 @@ fn test_update_file_saved() {
     let _task = update::update(&mut app, Message::FileSaved);
     //assert_eq!(task, Task::none());
 }
+
+#[test]
+fn test_theme_switching_single() {
+    let mut app = setup_app();
+    let initial_theme = app.theme;
+
+    // Switch to SolarizedDark
+    let _task = update::update(
+        &mut app,
+        Message::ThemeSelected(highlighter::Theme::SolarizedDark),
+    );
+
+    assert_eq!(app.theme, highlighter::Theme::SolarizedDark);
+    assert_ne!(app.theme, initial_theme);
+}
+
+#[test]
+fn test_theme_switching_multiple() {
+    let mut app = setup_app();
+    let themes = vec![
+        highlighter::Theme::SolarizedDark,
+        highlighter::Theme::InspiredGitHub,
+    ];
+
+    for theme in themes {
+        let _task = update::update(&mut app, Message::ThemeSelected(theme));
+        assert_eq!(app.theme, theme, "Theme should be updated to {:?}", theme);
+    }
+}
+
+#[test]
+fn test_theme_switching_preserves_content() {
+    let mut app = setup_app();
+    let original_text = app.text.clone();
+    let original_svg = app.svg.clone();
+    let original_error = app.error.clone();
+
+    // Switch theme
+    let _task = update::update(
+        &mut app,
+        Message::ThemeSelected(highlighter::Theme::SolarizedDark),
+    );
+
+    // Content should remain unchanged
+    assert_eq!(
+        app.text, original_text,
+        "Text should be preserved after theme switch"
+    );
+    assert_eq!(
+        app.svg, original_svg,
+        "SVG should be preserved after theme switch"
+    );
+    assert_eq!(
+        app.error, original_error,
+        "Error should be preserved after theme switch"
+    );
+}
+
+#[test]
+fn test_theme_switching_all_available_themes() {
+    let mut app = setup_app();
+
+    // Test all available themes
+    for &theme in highlighter::Theme::ALL {
+        let _task = update::update(&mut app, Message::ThemeSelected(theme));
+        assert_eq!(
+            app.theme, theme,
+            "Theme should be correctly updated to {:?}",
+            theme
+        );
+    }
+}
+
+#[test]
+fn test_theme_message_creation() {
+    // Test that ThemeSelected message is created correctly
+    let theme = highlighter::Theme::SolarizedDark;
+    let message = Message::ThemeSelected(theme);
+
+    match message {
+        Message::ThemeSelected(t) => {
+            assert_eq!(t, theme, "Theme in message should match the input theme");
+        }
+        _ => panic!("Message should be ThemeSelected variant"),
+    }
+}
+
+#[test]
+fn test_theme_affects_app_appearance() {
+    let mut app = setup_app();
+    let dark_theme = highlighter::Theme::SolarizedDark;
+    let light_theme = highlighter::Theme::InspiredGitHub;
+
+    // Set dark theme
+    let _ = update::update(&mut app, Message::ThemeSelected(dark_theme));
+    assert!(app.theme.is_dark(), "SolarizedDark should be a dark theme");
+
+    // Set light theme
+    let _ = update::update(&mut app, Message::ThemeSelected(light_theme));
+    assert!(
+        !app.theme.is_dark(),
+        "InspiredGitHub should not be a dark theme"
+    );
+}

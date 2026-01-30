@@ -29,7 +29,7 @@ impl MirrorApp {
         update::update(self, message)
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         view::view(&self)
     }
 

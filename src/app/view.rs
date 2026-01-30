@@ -4,13 +4,13 @@ use crate::components::editor::text_editor_component;
 use iced::widget::{column, container, row, svg, text};
 use iced::{Element, Length};
 
-pub fn view(model: &MirrorApp) -> Element<Message> {
+pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     let editor = text_editor_component(&model.content, Message::TextEditorAction);
 
     let svg_handle = svg::Handle::from_memory(model.svg.as_bytes().to_vec());
     let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
 
-    let controls = container(controls_row()).height(Length::Fixed(50.0));
+    let controls = container(controls_row(model.theme)).height(Length::Fixed(50.0));
 
     let content = column![
         controls,
