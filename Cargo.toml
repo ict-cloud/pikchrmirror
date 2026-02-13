@@ -7,22 +7,22 @@ edition = "2021"
 log = "0.4.*"
 pikchr = "0.1.*"
 pretty_env_logger = "0.5.*"
-rfd = "0.15.4"
+rfd = "0.17.*"
 xml-rs = "1.0.*"
 
 [dependencies.tokio]
-version = "1.48.*"
+version = "1.49.*"
 features = ["fs", "rt"]
 
 [dependencies.resvg]
-version = "0.45.*"
+version = "0.47.*"
 
 [dependencies.iced]
-version = "0.13.*"
+version = "0.14.*"
 features = ["svg", "highlighter", "tokio"]
 
 [dependencies.iced_wgpu]
-version = "0.13.*"
+version = "0.14.*"
 
 [profile.release]
 opt-level = "s" # or "z"
