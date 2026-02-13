@@ -5,21 +5,24 @@ This is a simple editor with preview and export functionality around the [Pikchr
 The program has a split main screen with some basic functionality.
 
 ## Editor
-A main editor presented at the left side of the screen. Showing line numbers.
+A main editor presented at the left side of the screen, with syntax highlighting and line numbers. As you type, the preview is updated in real-time.
 
 ## Preview
-A preview area where the rendered SVG is shown as soon as the button for rendering is clicked.
+A preview area on the right side of the screen where the rendered SVG is shown.
 
-## Render and export
-A button to render the graphic is at the bottom. And the result can be exported as a PNG.
+## File Operations
+- **New**: Clear the editor to start a new diagram.
+- **Open**: Open a `.pikchr` file from your computer.
+- **Save**: Save the current diagram as an `.svg` file.
+
+## Theming
+You can choose between different editor themes.
 
 # Libraries
 Following libraries are used to enable the main functionalities.
 
-## Floem
-
-[iced](https://github.com/iced-rs/iced/) is an UI library written in Rust originating.
-The library is widely adapted and part of bigger products. Previously I used [Floem](https://github.com/lapce/floem) from the [Lapce Editor](https://lapce.dev/), but could not get all functions to work.
+## iced
+[iced](https://github.com/iced-rs/iced/) is a cross-platform GUI library for Rust.
 
 ## Pikchr
 This is a simple wrapper around the official Pikchr library. Documented under https://docs.rs/pikchr/latest/pikchr/.

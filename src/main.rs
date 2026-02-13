@@ -15,5 +15,6 @@ pub fn main() -> iced::Result {
         .theme(MirrorApp::theme)
         .font(include_bytes!("../fonts/icons.ttf").as_slice())
         .default_font(Font::MONOSPACE)
+        .title(MirrorApp::title)
         .run()
 }
