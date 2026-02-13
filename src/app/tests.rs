@@ -121,7 +121,7 @@ fn test_update_new_file() {
     let _task = update::update(&mut app, Message::NewFile);
 
     assert!(app.text.is_empty());
-    assert!(!app.content.text().is_empty());
+    assert!(app.content.text().is_empty());
     assert!(
         !app.svg.is_empty(),
         "SVG should be generated for empty input (empty SVG)"
