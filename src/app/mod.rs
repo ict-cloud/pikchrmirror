@@ -31,7 +31,7 @@ impl MirrorApp {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        view::view(&self)
+        view::view(self)
     }
 
     pub fn theme(&self) -> Theme {
