@@ -9,4 +9,6 @@ pub enum Message {
     SaveFile,
     ThemeSelected(highlighter::Theme),
     FileSaved,
+    FileOpened(Result<(std::path::PathBuf, String), crate::filehandler::actions::Error>),
+    AcknowledgeError,
 }

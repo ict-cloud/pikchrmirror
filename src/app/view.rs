@@ -1,10 +1,27 @@
 use super::{Message, MirrorApp};
 use crate::components::controls::controls_row;
 use crate::components::editor::text_editor_component;
-use iced::widget::{column, container, row, svg, text};
+use iced::widget::{button, column, container, row, svg, text};
 use iced::{Element, Length};
 
 pub fn view(model: &MirrorApp) -> Element<'_, Message> {
+    if let Some(error) = &model.file_error {
+        return container(
+            column![
+                text("An error occurred:").size(20),
+                text(error),
+                button("OK").on_press(Message::AcknowledgeError)
+            ]
+            .spacing(20)
+            .padding(20),
+        )
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .center_x(Length::Fill)
+        .center_y(Length::Fill)
+        .into();
+    }
+
     let editor = text_editor_component(&model.content, Message::TextEditorAction);
 
     let svg_handle = svg::Handle::from_memory(model.svg.as_bytes().to_vec());

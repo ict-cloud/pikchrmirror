@@ -18,6 +18,7 @@ pub struct MirrorApp {
     pub svg: String,
     pub error: String,
     pub theme: highlighter::Theme,
+    pub file_error: Option<String>,
 }
 
 impl MirrorApp {

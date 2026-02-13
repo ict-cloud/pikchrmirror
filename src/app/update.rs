@@ -30,7 +30,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
 
             Task::none()
         }
-        Message::OpenFile => Task::none(),
+        Message::OpenFile => Task::perform(actions::open_file(), Message::FileOpened),
         Message::SaveFile => Task::perform(actions::save_file(None, model.svg.clone()), |_| {
             Message::FileSaved
         }),
@@ -39,5 +39,30 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
             Task::none()
         }
         Message::FileSaved => Task::none(),
+        Message::FileOpened(result) => {
+            match result {
+                Ok((_path, content)) => {
+                    model.text = content.clone();
+                    model.content = text_editor::Content::with_text(&content);
+                    let (svg, error) = parser::pikchr::pik_svgstring(&model.text, "");
+                    model.svg = svg;
+                    model.error = error;
+                }
+                Err(actions::Error::DialogClosed) => {}
+                Err(error) => {
+                    model.file_error = Some(format!("Error opening file: {:?}", error));
+                    model.content = text_editor::Content::new();
+                    model.text = String::new();
+                    let (svg, error) = parser::pikchr::pik_svgstring(&model.text, &model.svg);
+                    model.svg = svg;
+                    model.error = error;
+                }
+            }
+            Task::none()
+        }
+        Message::AcknowledgeError => {
+            model.file_error = None;
+            Task::none()
+        }
     }
 }

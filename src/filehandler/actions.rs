@@ -26,3 +26,17 @@ pub async fn save_file(path: Option<PathBuf>, contents: String) -> Result<PathBu
 
     Ok(path)
 }
+
+pub async fn open_file() -> Result<(PathBuf, String), Error> {
+    let handle = rfd::AsyncFileDialog::new()
+        .pick_file()
+        .await
+        .ok_or(Error::DialogClosed)?;
+
+    let path = handle.path().to_owned();
+    let contents = tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|error| Error::IoError(error.kind()))?;
+
+    Ok((path, contents))
+}

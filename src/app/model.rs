@@ -20,6 +20,7 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
             svg,
             error,
             theme: highlighter::Theme::InspiredGitHub,
+            file_error: None,
         }
     }
 }
