@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone)]
 pub enum Error {
     DialogClosed,
+    #[allow(dead_code)]
     IoError(io::ErrorKind),
 }
 

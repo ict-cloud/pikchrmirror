@@ -1,7 +1,7 @@
 use super::icons;
 use crate::app::Message;
-use iced::widget::{button, center, container, pick_list, row, tooltip, Space};
-use iced::{highlighter, widget};
+use iced::highlighter;
+use iced::widget::{button, center, container, pick_list, row, space, tooltip};
 use iced::{Center, Element, Length};
 
 pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Message> {
@@ -21,7 +21,7 @@ pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Mess
             "Save file",
             Some(Message::SaveFile)
         ),
-        widget::space().width(Length::Fill),
+        space().width(Length::Fill),
         //toggler(self.word_wrap)
         //    .label("Word Wrap")
         //    .on_toggle(Message::WordWrapToggled),
