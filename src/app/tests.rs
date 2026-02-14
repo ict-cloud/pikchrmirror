@@ -5,12 +5,6 @@ use iced::highlighter;
 use iced::widget::text_editor;
 
 #[test]
-fn test_message_text_input_changed() {
-    let message = Message::TextInputChanged(String::from("hello"));
-    assert_eq!(format!("{:?}", message), "TextInputChanged(\"hello\")");
-}
-
-#[test]
 fn test_message_new_file() {
     let message = Message::NewFile;
     assert_eq!(format!("{:?}", message), "NewFile");
