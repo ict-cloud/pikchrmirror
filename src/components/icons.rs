@@ -13,6 +13,10 @@ pub fn open_icon<'a, Message>() -> Element<'a, Message> {
     icon('\u{0f115}')
 }
 
+pub fn export_icon<'a, Message>() -> Element<'a, Message> {
+    icon('\u{f081}')
+}
+
 fn icon<'a, Message>(codepoint: char) -> Element<'a, Message> {
     const ICON_FONT: Font = Font::with_name("editor-icons");
 

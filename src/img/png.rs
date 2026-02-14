@@ -2,6 +2,9 @@ use resvg::{
     tiny_skia::{self, Pixmap},
     usvg,
 };
+use std::path::PathBuf;
+
+use crate::filehandler::actions::Error;
 
 fn pm_from_svgstr(i_svgstr: &str, i_wsize: f64) -> Pixmap {
     let tree = {
@@ -41,9 +44,29 @@ pub fn svg_to_png(i_svg: &str, i_width: Option<f64>) -> Vec<u8> {
     pm.encode_png().expect("PNG encoded")
 }
 
-pub fn svgstr_to_pngfile(i_svgstr: &str, i_file_path: &str) {
-    let pixmap = pm_from_svgstr(i_svgstr, 800.0);
-    pixmap
-        .save_png(i_file_path)
-        .expect("PNG successfully saved");
+pub async fn save_svg_as_png(
+    path: Option<PathBuf>,
+    svg_contents: String,
+    width: Option<f64>,
+) -> Result<PathBuf, Error> {
+    let path = if let Some(path) = path {
+        path
+    } else {
+        rfd::AsyncFileDialog::new()
+            .add_filter("PNG Image", &["png"])
+            .save_file()
+            .await
+            .as_ref()
+            .map(rfd::FileHandle::path)
+            .map(std::path::Path::to_owned)
+            .ok_or(Error::DialogClosed)?
+    };
+
+    let png_data = svg_to_png(&svg_contents, width);
+
+    tokio::fs::write(&path, png_data)
+        .await
+        .map_err(|error| Error::IoError(error.kind()))?;
+
+    Ok(path)
 }

@@ -21,6 +21,11 @@ pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Mess
             "Save file",
             Some(Message::SaveFile)
         ),
+        action(
+            icons::export_icon::<Message>(),
+            "Export",
+            Some(Message::ExportPNG)
+        ),
         space().width(Length::Fill),
         //toggler(self.word_wrap)
         //    .label("Word Wrap")

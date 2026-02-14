@@ -6,8 +6,10 @@ pub enum Message {
     NewFile,
     OpenFile,
     SaveFile,
+    ExportPNG,
     ThemeSelected(highlighter::Theme),
     FileSaved,
+    ImageExported,
     FileOpened(Result<(std::path::PathBuf, String), crate::filehandler::actions::Error>),
     AcknowledgeError,
 }
