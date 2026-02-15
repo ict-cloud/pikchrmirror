@@ -1,14 +1,20 @@
+mod app;
+mod components;
+mod filehandler;
 mod img;
 mod parser;
-mod view;
 
-use view::mainview::app_view;
+use app::MirrorApp;
+use iced::Font;
 
 #[cfg(test)]
 mod tests;
 
-fn main() {
-    pretty_env_logger::init();
-    log::debug!("Hello, PikchrMirror!");
-    floem::launch(app_view)
+pub fn main() -> iced::Result {
+    iced::application(MirrorApp::default, MirrorApp::update, MirrorApp::view)
+        .theme(MirrorApp::theme)
+        .font(include_bytes!("../fonts/icons.ttf").as_slice())
+        .default_font(Font::MONOSPACE)
+        .title(MirrorApp::title)
+        .run()
 }

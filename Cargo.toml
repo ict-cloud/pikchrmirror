@@ -1,21 +1,28 @@
 [package]
 name = "PikchrMirror"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 log = "0.4.*"
 pikchr = "0.1.*"
 pretty_env_logger = "0.5.*"
+rfd = "0.17.*"
 xml-rs = "1.0.*"
 
-[dependencies.resvg]
-version = "0.45.*"
+[dependencies.tokio]
+version = "1.49.*"
+features = ["fs", "rt", "macros"]
 
-[dependencies.floem]
-git = "https://github.com/lapce/floem"
-# rev = "b9bcd24"
-features = ["editor", "default-image-formats", "rfd-async-std"]
+[dependencies.resvg]
+version = "0.47.*"
+
+[dependencies.iced]
+version = "0.14.*"
+features = ["svg", "highlighter", "tokio"]
+
+[dependencies.iced_wgpu]
+version = "0.14.*"
 
 [profile.release]
 opt-level = "s" # or "z"
