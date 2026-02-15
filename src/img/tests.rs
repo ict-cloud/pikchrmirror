@@ -7,11 +7,17 @@ const TST_SVG: &str = r#"
   <rect x="20" y="20" width="60" height="60" fill=" ##FF0000 "/>
 </svg>"#;
 
-pub fn it_img_xport() {
-    png::svgstr_to_pngfile(TST_SVG, "./test.png");
-}
-
-pub fn it_img_encode() {
+#[test]
+fn test_img_encode() {
     let png = png::svg_to_png(TST_SVG, None);
     assert!(png.len() > 0);
+}
+
+#[tokio::test]
+async fn test_save_svg_as_png() {
+    let path = std::path::PathBuf::from("./test_async.png");
+    let result = png::save_svg_as_png(Some(path.clone()), TST_SVG.to_string(), None).await;
+    assert!(result.is_ok());
+    assert!(path.exists());
+    std::fs::remove_file(path).unwrap();
 }
