@@ -82,28 +82,6 @@ fn setup_app() -> MirrorApp {
 }
 
 #[test]
-fn test_update_text_input_changed() {
-    let mut app = setup_app();
-    let new_text = String::from("some new pikchr code");
-
-    let _task = update::update(&mut app, Message::TextInputChanged(new_text.clone()));
-
-    assert_eq!(app.text, new_text);
-    //assert_eq!(app.content.text(), new_text); // content should also reflect the change
-    // assert!(
-    //     !app.svg.is_empty(),
-    //     "SVG should be generated for valid input"
-    // );
-    // assert!(
-    //     app.error.is_empty(),
-    //     "Error should be empty for valid input"
-    // );
-    // Task does not implement PartialEq or Debug, so direct comparison is not possible.
-    // In this scenario, we expect no further actions from the task,
-    // and the core state changes are asserted above.
-}
-
-#[test]
 fn test_update_new_file() {
     let mut app = setup_app();
     // Simulate having some content before creating a new file

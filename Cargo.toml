@@ -12,7 +12,7 @@ xml-rs = "1.0.*"
 
 [dependencies.tokio]
 version = "1.49.*"
-features = ["fs", "rt"]
+features = ["fs", "rt", "macros"]
 
 [dependencies.resvg]
 version = "0.47.*"
