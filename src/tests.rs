@@ -1,5 +1,5 @@
 #[cfg(test)]
 #[test]
 fn it_main() {
-    println!("Start main test");
+    println!("Tests are executed in the modules");
 }
