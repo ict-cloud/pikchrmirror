@@ -13,7 +13,8 @@ A preview area on the right side of the screen where the rendered SVG is shown.
 ## File Operations
 - **New**: Clear the editor to start a new diagram.
 - **Open**: Open a `.pikchr` file from your computer.
-- **Save**: Save the current diagram as an `.svg` file.
+- **Save**: Save the current diagram source as a `.pikchr` or `.txt` file.
+- **Export**: Export the rendered diagram. Click the Export button to reveal format options, then choose **SVG** or **PNG**.
 
 ## Theming
 You can choose between different editor themes.

@@ -1,4 +1,4 @@
-use super::{Message, MirrorApp};
+use super::{ExportFormat, Message, MirrorApp};
 use crate::filehandler::actions;
 use crate::img::png;
 use crate::parser;
@@ -25,13 +25,26 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
             Task::none()
         }
         Message::OpenFile => Task::perform(actions::open_file(), Message::FileOpened),
-        Message::SaveFile => Task::perform(actions::save_file(None, model.svg.clone()), |_| {
-            Message::FileSaved
-        }),
-        Message::ExportPNG => {
-            Task::perform(png::save_svg_as_png(None, model.svg.clone(), None), |_| {
-                Message::ImageExported
-            })
+        Message::SaveFile => Task::perform(
+            actions::save_file(None, model.content.text()),
+            |_| Message::FileSaved,
+        ),
+        Message::Export => {
+            model.export_pending = true;
+            Task::none()
+        }
+        Message::ExportAs(format) => {
+            model.export_pending = false;
+            match format {
+                ExportFormat::Svg => Task::perform(
+                    actions::save_svg_file(None, model.svg.clone()),
+                    |_| Message::ImageExported,
+                ),
+                ExportFormat::Png => Task::perform(
+                    png::save_svg_as_png(None, model.svg.clone(), None),
+                    |_| Message::ImageExported,
+                ),
+            }
         }
         Message::ThemeSelected(theme) => {
             model.theme = theme;

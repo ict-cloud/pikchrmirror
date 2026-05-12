@@ -13,6 +13,28 @@ pub async fn save_file(path: Option<PathBuf>, contents: String) -> Result<PathBu
         path
     } else {
         rfd::AsyncFileDialog::new()
+            .add_filter("Pikchr diagram", &["pikchr", "txt"])
+            .save_file()
+            .await
+            .as_ref()
+            .map(rfd::FileHandle::path)
+            .map(Path::to_owned)
+            .ok_or(Error::DialogClosed)?
+    };
+
+    tokio::fs::write(&path, contents)
+        .await
+        .map_err(|error| Error::IoError(error.kind()))?;
+
+    Ok(path)
+}
+
+pub async fn save_svg_file(path: Option<PathBuf>, contents: String) -> Result<PathBuf, Error> {
+    let path = if let Some(path) = path {
+        path
+    } else {
+        rfd::AsyncFileDialog::new()
+            .add_filter("SVG Image", &["svg"])
             .save_file()
             .await
             .as_ref()

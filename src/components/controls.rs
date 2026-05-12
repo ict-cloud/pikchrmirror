@@ -1,10 +1,30 @@
 use super::icons;
-use crate::app::Message;
+use crate::app::{ExportFormat, Message};
 use iced::highlighter;
-use iced::widget::{button, center, container, pick_list, row, space, tooltip};
+use iced::widget::{button, center, container, pick_list, row, space, text, tooltip};
 use iced::{Center, Element, Length};
 
-pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Message> {
+pub fn controls_row(
+    selected_theme: highlighter::Theme,
+    export_pending: bool,
+) -> Element<'static, Message> {
+    let export_controls: Element<'static, Message> = if export_pending {
+        row![
+            button(center(text("SVG")).width(30).height(30))
+                .on_press(Message::ExportAs(ExportFormat::Svg)),
+            button(center(text("PNG")).width(30).height(30))
+                .on_press(Message::ExportAs(ExportFormat::Png)),
+        ]
+        .spacing(4)
+        .into()
+    } else {
+        action(
+            icons::export_icon::<Message>(),
+            "Export",
+            Some(Message::Export),
+        )
+    };
+
     row![
         action(
             icons::new_icon::<Message>(),
@@ -21,11 +41,7 @@ pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Mess
             "Save file",
             Some(Message::SaveFile)
         ),
-        action(
-            icons::export_icon::<Message>(),
-            "Export",
-            Some(Message::ExportPNG)
-        ),
+        export_controls,
         space().width(Length::Fill),
         //toggler(self.word_wrap)
         //    .label("Word Wrap")
