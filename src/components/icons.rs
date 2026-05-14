@@ -17,6 +17,14 @@ pub fn export_icon<'a, Message>() -> Element<'a, Message> {
     icon('\u{0E169}')
 }
 
+pub fn svg_export_icon<'a, Message>() -> Element<'a, Message> {
+    icon('\u{E251}')
+}
+
+pub fn png_export_icon<'a, Message>() -> Element<'a, Message> {
+    icon('\u{E3F4}')
+}
+
 fn icon<'a, Message>(codepoint: char) -> Element<'a, Message> {
     const ICON_FONT: Font = Font::with_name("Material Icons");
 
