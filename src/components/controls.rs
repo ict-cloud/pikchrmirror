@@ -1,7 +1,7 @@
 use super::icons;
 use crate::app::{ExportFormat, Message};
 use iced::highlighter;
-use iced::widget::{button, center, container, pick_list, row, space, text, tooltip};
+use iced::widget::{button, center, container, pick_list, row, space, tooltip};
 use iced::{Center, Element, Length};
 
 pub fn controls_row(
@@ -10,10 +10,16 @@ pub fn controls_row(
 ) -> Element<'static, Message> {
     let export_controls: Element<'static, Message> = if export_pending {
         row![
-            button(center(text("SVG")).width(30).height(30))
-                .on_press(Message::ExportAs(ExportFormat::Svg)),
-            button(center(text("PNG")).width(30).height(30))
-                .on_press(Message::ExportAs(ExportFormat::Png)),
+            action(
+                icons::export_icon::<Message>(),
+                "Export as SVG",
+                Some(Message::ExportAs(ExportFormat::Svg)),
+            ),
+            action(
+                icons::export_icon::<Message>(),
+                "Export as PNG",
+                Some(Message::ExportAs(ExportFormat::Png)),
+            ),
         ]
         .spacing(4)
         .into()
