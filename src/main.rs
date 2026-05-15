@@ -13,7 +13,7 @@ mod tests;
 pub fn main() -> iced::Result {
     iced::application(MirrorApp::default, MirrorApp::update, MirrorApp::view)
         .theme(MirrorApp::theme)
-        .font(include_bytes!("../fonts/icons.ttf").as_slice())
+        .font(include_bytes!("../fonts/material-design-icons.ttf").as_slice())
         .default_font(Font::MONOSPACE)
         .title(MirrorApp::title)
         .run()

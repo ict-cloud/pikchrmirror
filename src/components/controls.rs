@@ -1,10 +1,38 @@
 use super::icons;
-use crate::app::Message;
+use crate::app::{ExportFormat, Message};
 use iced::highlighter;
-use iced::widget::{button, center, container, pick_list, row, space, tooltip};
-use iced::{Center, Element, Length};
+use iced::widget::{button, center, container, pick_list, row, space, text, tooltip};
+use iced::{Background, Border, Center, Color, Element, Length, Shadow};
 
-pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Message> {
+pub fn controls_row(
+    selected_theme: highlighter::Theme,
+    export_pending: bool,
+) -> Element<'static, Message> {
+    let export_controls: Element<'static, Message> = if export_pending {
+        row![
+            action_labeled(
+                icons::svg_export_icon::<Message>(),
+                "SVG",
+                "Export as SVG",
+                Some(Message::ExportAs(ExportFormat::Svg)),
+            ),
+            action_labeled(
+                icons::png_export_icon::<Message>(),
+                "PNG",
+                "Export as PNG",
+                Some(Message::ExportAs(ExportFormat::Png)),
+            ),
+        ]
+        .spacing(4)
+        .into()
+    } else {
+        action(
+            icons::export_icon::<Message>(),
+            "Export",
+            Some(Message::Export),
+        )
+    };
+
     row![
         action(
             icons::new_icon::<Message>(),
@@ -21,11 +49,7 @@ pub fn controls_row(selected_theme: highlighter::Theme) -> Element<'static, Mess
             "Save file",
             Some(Message::SaveFile)
         ),
-        action(
-            icons::export_icon::<Message>(),
-            "Export",
-            Some(Message::ExportPNG)
-        ),
+        export_controls,
         space().width(Length::Fill),
         //toggler(self.word_wrap)
         //    .label("Word Wrap")
@@ -60,5 +84,47 @@ fn action<'a, Message: Clone + 'a>(
         .into()
     } else {
         action.style(button::secondary).into()
+    }
+}
+
+fn action_labeled<'a, Message: Clone + 'a>(
+    content: impl Into<Element<'a, Message>>,
+    format_label: &'a str,
+    tooltip_label: &'a str,
+    on_press: Option<Message>,
+) -> Element<'a, Message> {
+    let action = button(
+        row![center(content).width(30).height(30), text(format_label).size(12)]
+            .align_y(Center)
+            .spacing(2),
+    )
+    .padding([0, 6])
+    .style(export_format_style);
+
+    if let Some(on_press) = on_press {
+        tooltip(
+            action.on_press(on_press),
+            tooltip_label,
+            tooltip::Position::FollowCursor,
+        )
+        .style(container::rounded_box)
+        .into()
+    } else {
+        action.style(button::secondary).into()
+    }
+}
+
+fn export_format_style(_theme: &iced::Theme, status: button::Status) -> button::Style {
+    let bg = match status {
+        button::Status::Hovered => Color::from_rgb(0.0, 0.69, 0.63),
+        button::Status::Pressed => Color::from_rgb(0.0, 0.45, 0.40),
+        _ => Color::from_rgb(0.0, 0.59, 0.53),
+    };
+    button::Style {
+        background: Some(Background::Color(bg)),
+        text_color: Color::WHITE,
+        border: Border::default(),
+        shadow: Shadow::default(),
+        snap: false,
     }
 }
