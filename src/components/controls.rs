@@ -94,9 +94,12 @@ fn action_labeled<'a, Message: Clone + 'a>(
     on_press: Option<Message>,
 ) -> Element<'a, Message> {
     let action = button(
-        row![center(content).width(30).height(30), text(format_label).size(12)]
-            .align_y(Center)
-            .spacing(2),
+        row![
+            center(content).width(30).height(30),
+            text(format_label).size(12)
+        ]
+        .align_y(Center)
+        .spacing(2),
     )
     .padding([0, 6])
     .style(export_format_style);
