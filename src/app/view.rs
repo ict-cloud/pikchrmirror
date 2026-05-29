@@ -27,8 +27,12 @@ pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     let svg_handle = svg::Handle::from_memory(model.svg.as_bytes().to_vec());
     let svg_display = svg(svg_handle).width(Length::Fill).height(Length::Fill);
 
-    let controls =
-        container(controls_row(model.theme, model.export_pending)).height(Length::Fixed(50.0));
+    let controls = container(controls_row(
+        model.theme,
+        model.export_pending,
+        model.export_quality,
+    ))
+    .height(Length::Fixed(50.0));
 
     let content = column![
         controls,

@@ -27,6 +27,39 @@ impl std::fmt::Display for ExportFormat {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExportQuality {
+    Standard,
+    High,
+    Ultra,
+}
+
+impl ExportQuality {
+    pub const ALL: &'static [ExportQuality] = &[
+        ExportQuality::Standard,
+        ExportQuality::High,
+        ExportQuality::Ultra,
+    ];
+
+    pub fn scale(self) -> f32 {
+        match self {
+            ExportQuality::Standard => 1.0,
+            ExportQuality::High => 2.0,
+            ExportQuality::Ultra => 4.0,
+        }
+    }
+}
+
+impl std::fmt::Display for ExportQuality {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExportQuality::Standard => write!(f, "1x"),
+            ExportQuality::High => write!(f, "2x"),
+            ExportQuality::Ultra => write!(f, "4x"),
+        }
+    }
+}
+
 pub struct MirrorApp {
     pub text: String,
     pub content: text_editor::Content,
@@ -35,6 +68,7 @@ pub struct MirrorApp {
     pub theme: highlighter::Theme,
     pub file_error: Option<String>,
     pub export_pending: bool,
+    pub export_quality: ExportQuality,
 }
 
 impl MirrorApp {

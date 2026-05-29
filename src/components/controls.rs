@@ -1,5 +1,5 @@
 use super::icons;
-use crate::app::{ExportFormat, Message};
+use crate::app::{ExportFormat, ExportQuality, Message};
 use iced::highlighter;
 use iced::widget::{button, center, container, pick_list, row, space, text, tooltip};
 use iced::{Background, Border, Center, Color, Element, Length, Shadow};
@@ -7,6 +7,7 @@ use iced::{Background, Border, Center, Color, Element, Length, Shadow};
 pub fn controls_row(
     selected_theme: highlighter::Theme,
     export_pending: bool,
+    export_quality: ExportQuality,
 ) -> Element<'static, Message> {
     let export_controls: Element<'static, Message> = if export_pending {
         row![
@@ -22,6 +23,13 @@ pub fn controls_row(
                 "Export as PNG",
                 Some(Message::ExportAs(ExportFormat::Png)),
             ),
+            pick_list(
+                ExportQuality::ALL,
+                Some(export_quality),
+                Message::ExportQualitySelected,
+            )
+            .text_size(12)
+            .padding([4, 8]),
         ]
         .spacing(4)
         .into()
