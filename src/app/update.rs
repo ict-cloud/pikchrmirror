@@ -40,16 +40,14 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                         Message::ImageExported
                     })
                 }
-                ExportFormat::Png => {
-                    Task::perform(
-                        png::save_svg_as_png(
-                            None,
-                            model.svg.clone(),
-                            Some(model.export_quality.scale()),
-                        ),
-                        |_| Message::ImageExported,
-                    )
-                }
+                ExportFormat::Png => Task::perform(
+                    png::save_svg_as_png(
+                        None,
+                        model.svg.clone(),
+                        Some(model.export_quality.scale()),
+                    ),
+                    |_| Message::ImageExported,
+                ),
             }
         }
         Message::ThemeSelected(theme) => {
