@@ -40,11 +40,14 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                         Message::ImageExported
                     })
                 }
-                ExportFormat::Png => {
-                    Task::perform(png::save_svg_as_png(None, model.svg.clone(), None), |_| {
-                        Message::ImageExported
-                    })
-                }
+                ExportFormat::Png => Task::perform(
+                    png::save_svg_as_png(
+                        None,
+                        model.svg.clone(),
+                        Some(model.export_quality.scale()),
+                    ),
+                    |_| Message::ImageExported,
+                ),
             }
         }
         Message::ThemeSelected(theme) => {
@@ -72,6 +75,10 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                     model.error = error;
                 }
             }
+            Task::none()
+        }
+        Message::ExportQualitySelected(quality) => {
+            model.export_quality = quality;
             Task::none()
         }
         Message::AcknowledgeError => {

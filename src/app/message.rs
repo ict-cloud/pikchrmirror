@@ -12,5 +12,6 @@ pub enum Message {
     FileSaved,
     ImageExported,
     FileOpened(Result<(std::path::PathBuf, String), crate::filehandler::actions::Error>),
+    ExportQualitySelected(crate::app::ExportQuality),
     AcknowledgeError,
 }

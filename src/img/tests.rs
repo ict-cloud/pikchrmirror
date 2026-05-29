@@ -13,6 +13,13 @@ fn test_img_encode() {
     assert!(png.len() > 0);
 }
 
+#[test]
+fn test_scale_affects_output_size() {
+    let png_1x = png::svg_to_png(TST_SVG, Some(1.0));
+    let png_4x = png::svg_to_png(TST_SVG, Some(4.0));
+    assert!(png_4x.len() > png_1x.len());
+}
+
 #[tokio::test]
 async fn test_save_svg_as_png() {
     let path = std::path::PathBuf::from("./test_async.png");

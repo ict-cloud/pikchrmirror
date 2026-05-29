@@ -22,6 +22,7 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
             theme: highlighter::Theme::InspiredGitHub,
             file_error: None,
             export_pending: false,
+            export_quality: crate::app::ExportQuality::High,
         }
     }
 }
