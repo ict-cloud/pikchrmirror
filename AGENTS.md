@@ -1,31 +1,74 @@
-# AGENTS.md - AI Agent Integration Guide
+# Autonomous Agent and Developer Guidelines (AGENTS.md)
 
-This document provides detailed information for AI agents and agent frameworks on how to integrate with and use the PikchrMirror project.
+Welcome! This repository, `pikchrmirror`, uses a structured development workflow. Whether you are a human contributor or an autonomous AI development agent, you **must** strictly adhere to the rules, workflow, and guidelines outlined in this document.
 
-## Overview
+---
 
-PikchrMirror is an open source project that aims to provide a graphical user interfact to develop graphics with the pikchr language (https://pikchr.org).
-The main development language is Rust. The interface is using the iced framework.
+## 🤖 AI Agent Persona & Scope
+- **Context:** `pikchrmirror` is a mirror/utility tool related to Pikchr (a PIC-like diagram language).
+- **Primary Goal:** Maintain codebase hygiene, adhere strictly to Git workflows, and write clean, documented, and tested code.
+- **Validation:** Always verify existing code patterns and test suites before making structural changes.
 
-## Main features
+---
 
-The user interface is a split view with a left panel for editing the pikchr code and a right panel for previewing the resulting graphics as SVG. The preview is automatically updated whenever the code changes.
-The project also contains a wrapper around the pikchr library to export PNG images at a dedicated size.
-This leaves following basic functions:
+## Repository Structure
+  src/
+    main.rs          — app entry point
+    editor.rs        — code editor panel
+    preview.rs       — SVG preview panel
+    export.rs        — PNG export logic
+    pikchr/          — FFI wrapper around pikchr C library
+    
+---
 
-- Create new files to create pikchr code
-- Save pikchr files
-- Save SVG images
-- Export PNG images
-- Load existing pikchr files
+  ## Build & Run
+  cargo build
+  cargo run
+  
+---
 
-## Main User Interface
+  ## Testing
+  cargo test
+  cargo clippy --all-targets -- -D warnings
+  cargo fmt --check
+  
+---
 
-The main user interface consists of an editor panel on the left side and a preview panel on the right side. A tab bar is on the top accross both panels.
+  ## Key Dependencies
+  - iced: GUI framework (reactive, Elm-like architecture)
+  - pikchr (C library): wrapped via FFI in src/pikchr/
+  
+---
 
-### Tab bar functions
+  ## Architecture Notes
+  The app uses iced's update/view pattern. State lives in the top-level
+  App struct. Editor and preview panels communicate through Messages.
 
-- Create new file
-- Save SVG image
-- Load existing file
-- Switch theme of the main window
+## 🔄 Git Workflow & Branching Strategy
+
+We follow a modified Git Flow model where `develop` is the central integration branch. 
+
+### Core Rules:
+1. **Never** commit directly to the `main` or `develop` branches.
+2. **Development Entry Point:** All development and feature work **must** start by branching off from the latest `develop` branch.
+3. **Integration Point:** Once a feature, bug fix, or chore is complete, it must be integrated back into the `develop` branch via a Pull Request (PR).
+
+### Branch Naming Convention
+When creating a new branch from `develop`, use the following prefixes:
+- `feature/` for new features or enhancements (e.g., `feature/add-view-box`)
+- `bugfix/` for fixing issues (e.g., `bugfix/resolve-parser-crash`)
+- `chore/` for maintenance, CI/CD, or documentation updates (e.g., `chore/update-dependencies`)
+
+### Step-by-Step Workflow Example for Agents:
+```text
+[develop] ───► Create branch (feature/my-feature) ───► Make commits ───► Pull Request ───► [develop]
+```
+
+---
+
+  ## Agent Guidelines
+  - Always run `cargo clippy` and `cargo fmt` before considering a change done
+  - The pikchr FFI wrapper must uphold memory safety — avoid raw pointer changes without careful review
+  - SVG rendering is done inline; do not introduce external HTTP calls
+
+---
