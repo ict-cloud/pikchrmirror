@@ -21,7 +21,6 @@ fn pm_from_svgstr(i_svgstr: &str, i_scale: f32) -> Pixmap {
 
     let intrinsic = tree.size().to_int_size();
     let scale = i_scale.max(0.1);
-    log::debug!("svg->png scale: {}", scale);
 
     let transform = tiny_skia::Transform::from_scale(scale, scale);
     let out_w = ((intrinsic.width() as f32) * scale).round().max(1.0) as u32;

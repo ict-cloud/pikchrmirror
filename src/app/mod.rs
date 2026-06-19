@@ -41,7 +41,7 @@ impl ExportQuality {
         ExportQuality::Ultra,
     ];
 
-    pub fn scale(self) -> f32 {
+    pub const fn scale(self) -> f32 {
         match self {
             ExportQuality::Standard => 1.0,
             ExportQuality::High => 2.0,
