@@ -24,6 +24,13 @@ features = ["svg", "highlighter", "tokio"]
 [dependencies.iced_wgpu]
 version = "0.14.*"
 
+[dependencies.mistralrs]
+version = "0.8.1"
+optional = true
+
+[features]
+llm = ["dep:mistralrs"]
+
 [profile.release]
 opt-level = "s" # or "z"
 codegen-units = 1
