@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mistralrs::{GgufModelBuilder, Model, TextMessageRole, TextMessages};
+use mistralrs::{GgufModelBuilder, Model, RequestBuilder, TextMessageRole};
 
 const MODEL_FILE: &str = "Qwen3-0.6B-Q4_K_M.gguf";
 
@@ -71,25 +71,55 @@ pub async fn generate(
     messages: Vec<(String, String)>,
     system_prompt: String,
 ) -> Result<String, String> {
-    let mut tm = TextMessages::new().add_message(TextMessageRole::System, system_prompt);
-    for (role, text) in messages {
-        let r = if role == "assistant" {
-            TextMessageRole::Assistant
-        } else {
-            TextMessageRole::User
-        };
-        tm = tm.add_message(r, text);
+    // Spawn on a separate task so panics inside the generation are caught as JoinError
+    // rather than silently dropped by iced's Task machinery (which would leave `generating`
+    // stuck at true forever).
+    let handle = tokio::spawn(async move {
+        // Use RequestBuilder instead of TextMessages so we can cap max_len.
+        // Without a cap, Qwen3 on CPU can generate for minutes.
+        // Disable thinking: Qwen3 defaults thinking=true, adding a large <think>... preamble.
+        let mut req = RequestBuilder::new()
+            .enable_thinking(false)
+            .set_sampler_max_len(512)
+            .add_message(TextMessageRole::System, system_prompt);
+        for (role, text) in messages {
+            let r = if role == "assistant" {
+                TextMessageRole::Assistant
+            } else {
+                TextMessageRole::User
+            };
+            req = req.add_message(r, text);
+        }
+        model
+            .0
+            .send_chat_request(req)
+            .await
+            .map_err(|e| format!("{e}"))
+            .and_then(|response| {
+                response
+                    .choices
+                    .first()
+                    .and_then(|c| {
+                        c.message
+                            .content
+                            .clone()
+                            .or_else(|| c.message.reasoning_content.clone())
+                    })
+                    .ok_or_else(|| "empty response from model".to_string())
+            })
+    });
+
+    match tokio::time::timeout(std::time::Duration::from_secs(180), handle).await {
+        Ok(Ok(result)) => result,
+        Ok(Err(join_err)) => {
+            if join_err.is_panic() {
+                Err("Model panicked during generation — check logs".to_string())
+            } else {
+                Err("Generation task was cancelled".to_string())
+            }
+        }
+        Err(_) => Err("Generation timed out after 180 s".to_string()),
     }
-    let response = model
-        .0
-        .send_chat_request(tm)
-        .await
-        .map_err(|e| format!("{e}"))?;
-    response
-        .choices
-        .first()
-        .and_then(|c| c.message.content.clone())
-        .ok_or_else(|| "empty response from model".to_string())
 }
 
 /// Extract pikchr code from the model's response.
