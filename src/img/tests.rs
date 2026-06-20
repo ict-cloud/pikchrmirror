@@ -17,7 +17,7 @@ fn test_img_encode() {
 fn test_scale_affects_output_size() {
     let png_1x = png::svg_to_png(TST_SVG, Some(1.0));
     let png_4x = png::svg_to_png(TST_SVG, Some(4.0));
-    assert!(png_4x.len() > png_1x.len()); // Size comparison is valid
+    assert!(png_4x.len() > png_1x.len(), "scaled image should be larger");
 }
 
 #[tokio::test]

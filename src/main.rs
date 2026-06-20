@@ -2,6 +2,8 @@ mod app;
 mod components;
 mod filehandler;
 mod img;
+#[cfg(feature = "llm")]
+mod llm;
 mod parser;
 
 use app::MirrorApp;
