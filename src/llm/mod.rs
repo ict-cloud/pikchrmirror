@@ -4,10 +4,10 @@ use std::sync::Arc;
 
 use mistralrs::{GgufModelBuilder, Model, TextMessageRole, TextMessages};
 
-const MODEL_FILE: &str = "gemma-3-1b-it-Q4_K_M.gguf";
+const MODEL_FILE: &str = "Qwen3-0.6B-Q4_K_M.gguf";
 
-/// Embedded GGUF model bytes for Gemma 3 1B-it Q4_K_M quantization
-pub static EMBEDDED_GGUF: &[u8] = include_bytes!("../../assets/models/gemma-3-1b-it-Q4_K_M.gguf");
+/// Embedded GGUF model bytes for Qwen3 0.6B Q4_K_M quantization
+pub static EMBEDDED_GGUF: &[u8] = include_bytes!("../../assets/models/Qwen3-0.6B-Q4_K_M.gguf");
 
 pub struct MistralRs(Model);
 
