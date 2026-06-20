@@ -5,6 +5,9 @@ use crate::parser;
 use iced::widget::text_editor;
 use iced::Task;
 
+#[cfg(feature = "llm")]
+use crate::app::chat_state::Role;
+
 pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
     match message {
         Message::TextEditorAction(action) => {
@@ -83,6 +86,85 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
         }
         Message::AcknowledgeError => {
             model.file_error = None;
+            Task::none()
+        }
+        #[cfg(feature = "llm")]
+        Message::ToggleChat => {
+            model.chat.visible = !model.chat.visible;
+            if matches!(model.chat.status, crate::app::chat_state::ModelStatus::Unloaded) {
+                model.chat.status = crate::app::chat_state::ModelStatus::Loading;
+                Task::perform(crate::llm::load_model(), Message::ModelLoaded)
+            } else {
+                Task::none()
+            }
+        }
+        #[cfg(feature = "llm")]
+        Message::ModelLoaded(Ok(m)) => {
+            model.chat.model = Some(m);
+            model.chat.status = crate::app::chat_state::ModelStatus::Ready;
+            Task::none()
+        }
+        #[cfg(feature = "llm")]
+        Message::ModelLoaded(Err(e)) => {
+            model.chat.status = crate::app::chat_state::ModelStatus::Error(e);
+            Task::none()
+        }
+        #[cfg(feature = "llm")]
+        Message::ChatInputChanged(s) => {
+            model.chat.input = s;
+            Task::none()
+        }
+        #[cfg(feature = "llm")]
+        Message::ChatSubmit => {
+            if model.chat.input.is_empty() || model.chat.generating {
+                return Task::none();
+            }
+            let user_msg = model.chat.input.clone();
+            model.chat.input.clear();
+            model.chat.messages.push(crate::app::chat_state::ChatTurn {
+                role: Role::User,
+                text: user_msg.clone(),
+            });
+            model.chat.generating = true;
+
+            if let Some(model_ref) = model.chat.model.clone() {
+                let history = model.chat.messages.iter()
+                    .map(|turn| (
+                        match turn.role {
+                            Role::User => "user".to_string(),
+                            Role::Assistant => "assistant".to_string(),
+                        },
+                        turn.text.clone(),
+                    ))
+                    .collect::<Vec<_>>();
+                let system = crate::llm::system_prompt(&model.text);
+                Task::perform(
+                    crate::llm::generate(model_ref, history, system),
+                    |result| Message::ChatReplyDone(result.unwrap_or_else(|e| format!("Error: {}", e))),
+                )
+            } else {
+                Task::none()
+            }
+        }
+        #[cfg(feature = "llm")]
+        Message::ChatReplyDone(reply) => {
+            model.chat.messages.push(crate::app::chat_state::ChatTurn {
+                role: Role::Assistant,
+                text: reply.clone(),
+            });
+            model.chat.generating = false;
+            model.chat.proposed_code = crate::llm::extract_pikchr_block(&reply);
+            Task::none()
+        }
+        #[cfg(feature = "llm")]
+        Message::ApplyProposedCode => {
+            if let Some(code) = model.chat.proposed_code.take() {
+                model.text = code.clone();
+                model.content = text_editor::Content::with_text(&code);
+                let (svg, error) = parser::pikchr::pik_svgstring(&code, "");
+                model.svg = svg;
+                model.error = error;
+            }
             Task::none()
         }
     }

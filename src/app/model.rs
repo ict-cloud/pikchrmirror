@@ -23,6 +23,8 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
             file_error: None,
             export_pending: false,
             export_quality: crate::app::ExportQuality::High,
+            #[cfg(feature = "llm")]
+            chat: crate::app::ChatState::default(),
         }
     }
 }

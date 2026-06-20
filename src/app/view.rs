@@ -4,6 +4,9 @@ use crate::components::editor::text_editor_component;
 use iced::widget::{button, column, container, row, svg, text};
 use iced::{Element, Length};
 
+#[cfg(feature = "llm")]
+use crate::components::chat::chat_panel;
+
 pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     if let Some(error) = &model.file_error {
         return container(
@@ -34,17 +37,30 @@ pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     ))
     .height(Length::Fixed(50.0));
 
+    #[cfg(feature = "llm")]
+    let chat_col: Element<'_, Message> = if model.chat.visible {
+        column![chat_panel(&model.chat, model.chat.generating)]
+            .width(Length::FillPortion(1))
+            .into()
+    } else {
+        column![].width(Length::Shrink).into()
+    };
+
+    #[cfg(not(feature = "llm"))]
+    let chat_col: Element<'_, Message> = column![].width(Length::Shrink).into();
+
     let content = column![
         controls,
         row![
-            column![editor].width(Length::FillPortion(1)),
+            column![editor].width(Length::FillPortion(2)),
             column![
                 container(svg_display)
                     .width(Length::Fill)
                     .height(Length::Fill),
                 text(&model.error)
             ]
-            .width(Length::FillPortion(1))
+            .width(Length::FillPortion(2)),
+            chat_col,
         ]
     ];
 

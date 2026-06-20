@@ -41,38 +41,76 @@ pub fn controls_row(
         )
     };
 
-    row![
-        action(
-            icons::new_icon::<Message>(),
-            "New file",
-            Some(Message::NewFile)
-        ),
-        action(
-            icons::open_icon::<Message>(),
-            "Open file",
-            Some(Message::OpenFile)
-        ),
-        action(
-            icons::save_icon::<Message>(),
-            "Save file",
-            Some(Message::SaveFile)
-        ),
-        export_controls,
-        space().width(Length::Fill),
-        //toggler(self.word_wrap)
-        //    .label("Word Wrap")
-        //    .on_toggle(Message::WordWrapToggled),
-        pick_list(
-            highlighter::Theme::ALL,
-            Some(selected_theme),
-            Message::ThemeSelected
-        )
-        .text_size(12)
-        .padding([4, 8])
-    ]
-    .spacing(10)
-    .align_y(Center)
-    .into()
+    #[cfg(feature = "llm")]
+    {
+        row![
+            action(
+                icons::new_icon::<Message>(),
+                "New file",
+                Some(Message::NewFile)
+            ),
+            action(
+                icons::open_icon::<Message>(),
+                "Open file",
+                Some(Message::OpenFile)
+            ),
+            action(
+                icons::save_icon::<Message>(),
+                "Save file",
+                Some(Message::SaveFile)
+            ),
+            export_controls,
+            action(
+                text("Chat"),
+                "Toggle chat panel",
+                Some(Message::ToggleChat)
+            ),
+            space().width(Length::Fill),
+            pick_list(
+                highlighter::Theme::ALL,
+                Some(selected_theme),
+                Message::ThemeSelected
+            )
+            .text_size(12)
+            .padding([4, 8])
+        ]
+        .spacing(10)
+        .align_y(Center)
+        .into()
+    }
+
+    #[cfg(not(feature = "llm"))]
+    {
+        row![
+            action(
+                icons::new_icon::<Message>(),
+                "New file",
+                Some(Message::NewFile)
+            ),
+            action(
+                icons::open_icon::<Message>(),
+                "Open file",
+                Some(Message::OpenFile)
+            ),
+            action(
+                icons::save_icon::<Message>(),
+                "Save file",
+                Some(Message::SaveFile)
+            ),
+            export_controls,
+            space().width(Length::Fill),
+            pick_list(
+                highlighter::Theme::ALL,
+                Some(selected_theme),
+                Message::ThemeSelected
+            )
+            .text_size(12)
+            .padding([4, 8])
+        ]
+        .spacing(10)
+        .align_y(Center)
+        .into()
+    }
 }
 
 fn action<'a, Message: Clone + 'a>(

@@ -7,7 +7,13 @@ pub mod model;
 pub mod update;
 pub mod view;
 
+#[cfg(feature = "llm")]
+pub mod chat_state;
+
 pub use message::Message;
+
+#[cfg(feature = "llm")]
+pub use chat_state::ChatState;
 
 #[cfg(test)]
 pub mod tests;
@@ -69,6 +75,8 @@ pub struct MirrorApp {
     pub file_error: Option<String>,
     pub export_pending: bool,
     pub export_quality: ExportQuality,
+    #[cfg(feature = "llm")]
+    pub chat: ChatState,
 }
 
 impl MirrorApp {
