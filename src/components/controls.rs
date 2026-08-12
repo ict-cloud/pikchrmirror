@@ -60,11 +60,7 @@ pub fn controls_row(
                 Some(Message::SaveFile)
             ),
             export_controls,
-            action(
-                text("Chat"),
-                "Toggle chat panel",
-                Some(Message::ToggleChat)
-            ),
+            action(text("Chat"), "Toggle chat panel", Some(Message::ToggleChat)),
             space().width(Length::Fill),
             pick_list(
                 highlighter::Theme::ALL,
