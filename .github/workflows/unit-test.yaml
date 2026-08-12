@@ -20,4 +20,4 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: cargo test --release --all-features
+      - run: cargo test --release
