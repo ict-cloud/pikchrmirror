@@ -91,7 +91,10 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
         #[cfg(feature = "llm")]
         Message::ToggleChat => {
             model.chat.visible = !model.chat.visible;
-            if matches!(model.chat.status, crate::app::chat_state::ModelStatus::Unloaded) {
+            if matches!(
+                model.chat.status,
+                crate::app::chat_state::ModelStatus::Unloaded
+            ) {
                 model.chat.status = crate::app::chat_state::ModelStatus::Loading;
                 Task::perform(crate::llm::load_model(), Message::ModelLoaded)
             } else {
@@ -128,20 +131,24 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
             model.chat.generating = true;
 
             if let Some(model_ref) = model.chat.model.clone() {
-                let history = model.chat.messages.iter()
-                    .map(|turn| (
-                        match turn.role {
-                            Role::User => "user".to_string(),
-                            Role::Assistant => "assistant".to_string(),
-                        },
-                        turn.text.clone(),
-                    ))
+                let history = model
+                    .chat
+                    .messages
+                    .iter()
+                    .map(|turn| {
+                        (
+                            match turn.role {
+                                Role::User => "user".to_string(),
+                                Role::Assistant => "assistant".to_string(),
+                            },
+                            turn.text.clone(),
+                        )
+                    })
                     .collect::<Vec<_>>();
                 let system = crate::llm::system_prompt(&model.text);
-                Task::perform(
-                    crate::llm::generate(model_ref, history, system),
-                    |result| Message::ChatReplyDone(result.unwrap_or_else(|e| format!("Error: {}", e))),
-                )
+                Task::perform(crate::llm::generate(model_ref, history, system), |result| {
+                    Message::ChatReplyDone(result.unwrap_or_else(|e| format!("Error: {}", e)))
+                })
             } else {
                 Task::none()
             }
