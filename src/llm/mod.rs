@@ -34,7 +34,6 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
         cache_dir.to_string_lossy().into_owned(),
         vec![MODEL_FILE.to_string()],
     )
-    .with_force_cpu()
     .build()
     .await
     .map_err(|e| format!("Failed to load model: {e}"))?;
@@ -80,7 +79,7 @@ pub async fn generate(
         // Disable thinking: Qwen3 defaults thinking=true, adding a large <think>... preamble.
         let mut req = RequestBuilder::new()
             .enable_thinking(false)
-            .set_sampler_max_len(512)
+            .set_sampler_max_len(150)
             .add_message(TextMessageRole::System, system_prompt);
         for (role, text) in messages {
             let r = if role == "assistant" {
