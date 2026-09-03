@@ -37,3 +37,15 @@ opt-level = "s" # or "z"
 codegen-units = 1
 lto = "thin" #alternatives "fat" or "false"
 strip = "debuginfo"
+
+# Debug builds of candle/mistralrs are ~25x slower at inference (99s vs 4s for a
+# 150-token reply), making the chat feature look hung. Optimize just these crates
+# even in dev builds so `cargo run --features llm` stays usable.
+[profile.dev.package.candle-core]
+opt-level = 3
+[profile.dev.package.candle-nn]
+opt-level = 3
+[profile.dev.package.mistralrs-core]
+opt-level = 3
+[profile.dev.package.mistralrs-quant]
+opt-level = 3
