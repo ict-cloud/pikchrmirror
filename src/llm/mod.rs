@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mistralrs::{GgufModelBuilder, Model, RequestBuilder, TextMessageRole};
+use mistralrs::{DeviceMapSetting, GgufModelBuilder, Model, RequestBuilder, TextMessageRole};
 
 const MODEL_FILE: &str = "Qwen3-0.6B-Q4_K_M.gguf";
 
@@ -34,6 +34,11 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
         cache_dir.to_string_lossy().into_owned(),
         vec![MODEL_FILE.to_string()],
     )
+    .with_force_cpu()
+    // Skip mistralrs' memory-based auto device mapping: on some hosts it misreads
+    // available CPU RAM as 0MB and refuses to load any model. We only ever run on
+    // a single forced CPU device, so just place all layers there directly.
+    .with_device_mapping(DeviceMapSetting::dummy())
     .build()
     .await
     .map_err(|e| format!("Failed to load model: {e}"))?;
