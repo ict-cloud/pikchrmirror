@@ -1,0 +1,11 @@
+[package]
+name = "pikchrmirror-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.*"
+pikchr = "0.1.*"
+
+[dependencies.resvg]
+version = "0.48.*"

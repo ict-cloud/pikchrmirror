@@ -2,9 +2,6 @@ use resvg::{
     tiny_skia::{self, Pixmap},
     usvg,
 };
-use std::path::PathBuf;
-
-use crate::filehandler::actions::Error;
 
 fn pm_from_svgstr(i_svgstr: &str, i_scale: f32) -> Pixmap {
     let tree = {
@@ -39,29 +36,27 @@ pub fn svg_to_png(i_svg: &str, i_scale: Option<f32>) -> Vec<u8> {
     pm.encode_png().expect("PNG encoded")
 }
 
-pub async fn save_svg_as_png(
-    path: Option<PathBuf>,
-    svg_contents: String,
-    scale: Option<f32>,
-) -> Result<PathBuf, Error> {
-    let path = if let Some(path) = path {
-        path
-    } else {
-        rfd::AsyncFileDialog::new()
-            .add_filter("PNG Image", &["png"])
-            .save_file()
-            .await
-            .as_ref()
-            .map(rfd::FileHandle::path)
-            .map(std::path::Path::to_owned)
-            .ok_or(Error::DialogClosed)?
-    };
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let png_data = svg_to_png(&svg_contents, scale);
+    const TST_SVG: &str = r#"
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.2 Tiny//EN"
+                     "http://www.w3.org/TR/SVGTiny12/DTD/SVGTiny12.dtd">
+<svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="20" width="60" height="60" fill=" ##FF0000 "/>
+</svg>"#;
 
-    tokio::fs::write(&path, png_data)
-        .await
-        .map_err(|error| Error::IoError(error.kind()))?;
+    #[test]
+    fn test_img_encode() {
+        let png = svg_to_png(TST_SVG, None);
+        assert!(!png.is_empty());
+    }
 
-    Ok(path)
+    #[test]
+    fn test_scale_affects_output_size() {
+        let png_1x = svg_to_png(TST_SVG, Some(1.0));
+        let png_4x = svg_to_png(TST_SVG, Some(4.0));
+        assert!(png_4x.len() > png_1x.len(), "scaled image should be larger");
+    }
 }
