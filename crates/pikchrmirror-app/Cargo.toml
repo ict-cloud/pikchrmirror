@@ -1,0 +1,33 @@
+[package]
+name = "PikchrMirror"
+version = "0.2.2"
+edition = "2021"
+
+[dependencies]
+log = "0.4.*"
+pikchr = "0.1.*"
+pretty_env_logger = "0.5.*"
+rfd = "0.17.*"
+xml-rs = "1.0.*"
+
+[dependencies.tokio]
+version = "1.53.*"
+features = ["fs", "rt", "macros"]
+
+[dependencies.resvg]
+version = "0.48.*"
+
+[dependencies.iced]
+version = "0.14.*"
+features = ["svg", "highlighter", "tokio"]
+
+[dependencies.iced_wgpu]
+version = "0.14.*"
+
+[dependencies.mistralrs]
+version = "0.8.1"
+optional = true
+features = ["accelerate"]
+
+[features]
+llm = ["dep:mistralrs"]
