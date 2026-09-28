@@ -11,8 +11,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
     match message {
         Message::TextEditorAction(action) => {
             model.content.perform(action);
-            let (svg, error) =
-                pikchrmirror_core::pik_svgstring(&model.content.text(), &model.svg);
+            let (svg, error) = pikchrmirror_core::pik_svgstring(&model.content.text(), &model.svg);
             model.svg = svg;
             model.error = error;
 
@@ -21,8 +20,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
         Message::NewFile => {
             model.content = text_editor::Content::new();
             model.text = String::new();
-            let (svg, error) =
-                pikchrmirror_core::pik_svgstring(&model.content.text(), &model.svg);
+            let (svg, error) = pikchrmirror_core::pik_svgstring(&model.content.text(), &model.svg);
             model.svg = svg;
             model.error = error;
 
@@ -74,8 +72,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                     model.file_error = Some(format!("Error opening file: {:?}", error));
                     model.content = text_editor::Content::new();
                     model.text = String::new();
-                    let (svg, error) =
-                        pikchrmirror_core::pik_svgstring(&model.text, &model.svg);
+                    let (svg, error) = pikchrmirror_core::pik_svgstring(&model.text, &model.svg);
                     model.svg = svg;
                     model.error = error;
                 }
