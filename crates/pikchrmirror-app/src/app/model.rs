@@ -1,5 +1,4 @@
 use super::MirrorApp;
-use crate::parser::pikchr;
 
 use iced::highlighter;
 use iced::widget::text_editor;
@@ -13,7 +12,7 @@ box rad 10px "HTML" "(pikchr.c)" fit
 arrow right 200% "pikchr" "SVG"
 box rad 10px "pikchr" "(cgi/pikchr.c)" fit
 "##;
-        let (svg, error) = pikchr::pik_svgstring(initial_text, "");
+        let (svg, error) = pikchrmirror_core::pik_svgstring(initial_text, "");
         Self {
             text: String::from(initial_text),
             content: text_editor::Content::with_text(initial_text),
