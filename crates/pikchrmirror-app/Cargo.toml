@@ -14,9 +14,6 @@ xml-rs = "1.0.*"
 version = "1.53.*"
 features = ["fs", "rt", "macros"]
 
-[dependencies.resvg]
-version = "0.48.*"
-
 [dependencies.iced]
 version = "0.14.*"
 features = ["svg", "highlighter", "tokio"]
