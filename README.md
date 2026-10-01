@@ -19,6 +19,22 @@ A preview area on the right side of the screen where the rendered SVG is shown.
 ## Theming
 You can choose between different editor themes.
 
+# MCP server (`pikchr-mcp`)
+`pikchr-mcp` lets any [MCP](https://modelcontextprotocol.io)-capable LLM client (Claude Desktop, Claude Code, IDE agents, ...) render pikchr diagrams as a tool, so the model writes the diagram and no model needs to be embedded in the app. It speaks MCP over stdio.
+
+Build and register it:
+```
+cargo build --release -p pikchrmirror-mcp
+claude mcp add pikchr -- /path/to/target/release/pikchr-mcp
+```
+For clients configured through JSON, use `{"mcpServers": {"pikchr": {"command": "/path/to/pikchr-mcp"}}}`.
+
+Tools:
+- `render_pikchr(source, png?, scale?, include_svg?)` compiles the source and returns the SVG (plus a PNG image when `png` is true). On a syntax error it returns `isError` with `error: {message, line, col, context}` so the model can fix that spot and retry.
+- `pikchr_syntax_reference()` returns a compact syntax cheat sheet. The same text is available as the resource `pikchr://syntax-reference`.
+
+The rendering logic lives in the `pikchrmirror-core` crate, shared with the GUI.
+
 # Libraries
 Following libraries are used to enable the main functionalities.
 
