@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
-members = ["crates/pikchrmirror-core", "crates/pikchrmirror-app"]
+members = [
+    "crates/pikchrmirror-core",
+    "crates/pikchrmirror-app",
+    "crates/pikchrmirror-mcp",
+]
 default-members = ["crates/pikchrmirror-app"]
 
 [profile.release]
