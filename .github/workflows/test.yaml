@@ -37,7 +37,7 @@ jobs:
         with:
           shared-key: "test-yaml"
 
-      - run: "cargo check"
+      - run: "cargo check --workspace"
 
   clippy:
     name: "Cargo clippy"
@@ -55,7 +55,7 @@ jobs:
         with:
           shared-key: "test-yaml"
 
-      - run: "cargo clippy -- -D warnings"
+      - run: "cargo clippy --workspace -- -D warnings"
 
   test:
     name: "Cargo test"
@@ -71,4 +71,4 @@ jobs:
         with:
           shared-key: "test-yaml"
 
-      - run: "cargo test"
+      - run: "cargo test --workspace"
