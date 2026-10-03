@@ -4,6 +4,7 @@ members = [
     "crates/pikchrmirror-core",
     "crates/pikchrmirror-app",
     "crates/pikchrmirror-mcp",
+    "crates/pikchrmirror-models",
 ]
 default-members = ["crates/pikchrmirror-app"]
 

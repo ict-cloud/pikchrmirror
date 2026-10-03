@@ -23,7 +23,19 @@ version = "0.14.*"
 [dependencies.mistralrs]
 version = "0.8.1"
 optional = true
+
+# Apple's Accelerate framework only exists on macOS; enabling it elsewhere
+# fails the build ("library kind `framework` is only supported on Apple targets").
+[target.'cfg(target_os = "macos")'.dependencies.mistralrs]
+version = "0.8.1"
+optional = true
 features = ["accelerate"]
 
+[build-dependencies.pikchrmirror-models]
+path = "../pikchrmirror-models"
+optional = true
+
 [features]
-llm = ["dep:mistralrs"]
+# Chat assistant. The model is selected in /models.toml and downloaded at build
+# time (set PIKCHR_MODEL=none to compile without downloading anything).
+llm = ["dep:mistralrs", "dep:pikchrmirror-models"]

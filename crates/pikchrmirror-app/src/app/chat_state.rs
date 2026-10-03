@@ -39,7 +39,8 @@ pub struct ChatTurn {
 #[cfg(feature = "llm")]
 #[derive(Clone)]
 pub struct ChatState {
-    pub visible: bool,
+    /// The chat's own window, `Some` while it is open.
+    pub window: Option<iced::window::Id>,
     pub input: String,
     pub messages: Vec<ChatTurn>,
     pub model: Option<Arc<crate::llm::MistralRs>>,
@@ -52,7 +53,7 @@ pub struct ChatState {
 impl Default for ChatState {
     fn default() -> Self {
         Self {
-            visible: false,
+            window: None,
             input: String::new(),
             messages: Vec::new(),
             model: None,
@@ -67,7 +68,7 @@ impl Default for ChatState {
 impl std::fmt::Debug for ChatState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ChatState")
-            .field("visible", &self.visible)
+            .field("window", &self.window)
             .field("input", &self.input)
             .field("messages", &self.messages)
             .field("model", &self.model.is_some())
@@ -75,5 +76,13 @@ impl std::fmt::Debug for ChatState {
             .field("generating", &self.generating)
             .field("proposed_code", &self.proposed_code)
             .finish()
+    }
+}
+
+#[cfg(feature = "llm")]
+impl ChatState {
+    /// Messages can only be sent once the model is loaded and idle.
+    pub fn can_send(&self) -> bool {
+        self.status == ModelStatus::Ready && !self.generating
     }
 }

@@ -2,12 +2,21 @@ use super::{Message, MirrorApp};
 use crate::components::controls::controls_row;
 use crate::components::editor::text_editor_component;
 use iced::widget::{button, column, container, row, svg, text};
-use iced::{Element, Length};
+use iced::{window, Element, Length};
 
 #[cfg(feature = "llm")]
 use crate::components::chat::chat_panel;
 
-pub fn view(model: &MirrorApp) -> Element<'_, Message> {
+#[cfg_attr(not(feature = "llm"), allow(unused_variables))]
+pub fn view(model: &MirrorApp, window: window::Id) -> Element<'_, Message> {
+    #[cfg(feature = "llm")]
+    if model.chat.window == Some(window) {
+        return container(chat_panel(&model.chat))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into();
+    }
+
     if let Some(error) = &model.file_error {
         return container(
             column![
@@ -37,18 +46,6 @@ pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     ))
     .height(Length::Fixed(50.0));
 
-    #[cfg(feature = "llm")]
-    let chat_col: Element<'_, Message> = if model.chat.visible {
-        column![chat_panel(&model.chat, model.chat.generating)]
-            .width(Length::FillPortion(1))
-            .into()
-    } else {
-        column![].width(Length::Shrink).into()
-    };
-
-    #[cfg(not(feature = "llm"))]
-    let chat_col: Element<'_, Message> = column![].width(Length::Shrink).into();
-
     let content = column![
         controls,
         row![
@@ -60,7 +57,6 @@ pub fn view(model: &MirrorApp) -> Element<'_, Message> {
                 text(&model.error)
             ]
             .width(Length::FillPortion(2)),
-            chat_col,
         ]
     ];
 

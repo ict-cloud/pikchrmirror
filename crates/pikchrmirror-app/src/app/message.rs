@@ -14,6 +14,7 @@ pub enum Message {
     FileOpened(Result<(std::path::PathBuf, String), crate::filehandler::actions::Error>),
     ExportQualitySelected(crate::app::ExportQuality),
     AcknowledgeError,
+    WindowClosed(iced::window::Id),
     #[cfg(feature = "llm")]
     ToggleChat,
     #[cfg(feature = "llm")]

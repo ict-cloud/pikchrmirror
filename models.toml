@@ -1,0 +1,36 @@
+# Model registry for the optional `llm` feature (chat assistant).
+#
+# The weights are NOT stored in git. When the app is built with
+# `--features llm`, build.rs downloads the selected model once into
+# `target/pikchr-models/<id>/` and bakes that location into the binary.
+#
+# Pick the model here, or override a single build with an environment variable:
+#   PIKCHR_MODEL=granite cargo build --features llm
+#   PIKCHR_MODEL=none    cargo check --features llm   # compile only, nothing downloaded (CI)
+#
+# Other build-time knobs: PIKCHR_MODEL_CACHE (download dir), HF_ENDPOINT (mirror),
+# HF_TOKEN (gated repositories). See WEIGHTS.md.
+
+selected = "granite"
+
+# `include` (optional) lists top-level file patterns to download; the default is
+# the config, tokenizer and safetensors files. `revision` defaults to "main" -
+# pin a commit hash for reproducible builds.
+
+[models.granite]
+name = "IBM Granite 4.0 H Micro (3B instruct, code + chat, Apache-2.0)"
+repo = "ibm-granite/granite-4.0-h-micro"
+
+# Registered so the choice is explicit, but the inference backend (mistralrs 0.8.1)
+# cannot load these yet. Selecting one stops the build with the reason below.
+[models.apertus]
+name = "Swiss AI Apertus 8B Instruct"
+repo = "swiss-ai/Apertus-8B-Instruct-2509"
+supported = false
+reason = "mistralrs 0.8.1 has no Apertus architecture (neither GGUF nor safetensors loader)"
+
+[models.soofi]
+name = "Soofi S Instruct (30B-A3B)"
+repo = "Soofi-Project/Soofi-S-Instruct-Preview"
+supported = false
+reason = "30B-A3B hybrid Mamba MoE: no mistralrs 0.8.1 loader, and too large to bundle with a desktop app"

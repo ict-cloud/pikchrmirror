@@ -8,7 +8,7 @@ use iced::widget::{button, column, row, scrollable, space, text, text_input};
 use iced::{Element, Length};
 
 #[cfg(feature = "llm")]
-pub fn chat_panel(state: &ChatState, _generating: bool) -> Element<'_, Message> {
+pub fn chat_panel(state: &ChatState) -> Element<'_, Message> {
     let messages_col = scrollable(
         column(
             state
@@ -28,16 +28,20 @@ pub fn chat_panel(state: &ChatState, _generating: bool) -> Element<'_, Message> 
     )
     .height(Length::Fill);
 
-    let status_text = format!("{}", &state.status);
+    let status_text = if state.generating {
+        String::from("Generating…")
+    } else {
+        state.status.to_string()
+    };
+
+    let ready = state.can_send().then_some(Message::ChatSubmit);
 
     let input_box = text_input("Type a description…", &state.input)
         .on_input(Message::ChatInputChanged)
-        .on_submit(Message::ChatSubmit)
+        .on_submit_maybe(ready.clone())
         .width(Length::Fill);
 
-    let send_button = button("Send")
-        .on_press(Message::ChatSubmit)
-        .width(Length::Shrink);
+    let send_button = button("Send").on_press_maybe(ready).width(Length::Shrink);
 
     let apply_section: Element<'_, Message> = if let Some(_code) = &state.proposed_code {
         button("Apply to editor")

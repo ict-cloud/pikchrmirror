@@ -1,6 +1,6 @@
 use iced::highlighter;
 use iced::widget::text_editor;
-use iced::{Element, Task, Theme};
+use iced::{window, Element, Subscription, Task, Theme};
 
 pub mod message;
 pub mod model;
@@ -67,6 +67,8 @@ impl std::fmt::Display for ExportQuality {
 }
 
 pub struct MirrorApp {
+    /// Main editor window; closing it quits the application.
+    pub main_window: Option<window::Id>,
     pub text: String,
     pub content: text_editor::Content,
     pub svg: String,
@@ -80,19 +82,38 @@ pub struct MirrorApp {
 }
 
 impl MirrorApp {
-    pub fn title(&self) -> String {
+    /// Initial state plus the task that opens the main window.
+    pub fn boot() -> (Self, Task<Message>) {
+        let (id, open) = window::open(window::Settings::default());
+        let app = Self {
+            main_window: Some(id),
+            ..Self::default()
+        };
+        (app, open.discard())
+    }
+
+    #[cfg_attr(not(feature = "llm"), allow(unused_variables))]
+    pub fn title(&self, window: window::Id) -> String {
+        #[cfg(feature = "llm")]
+        if self.chat.window == Some(window) {
+            return String::from("PikchrMirror – Chat");
+        }
         String::from("PikchrMirror")
+    }
+
+    pub fn subscription(&self) -> Subscription<Message> {
+        window::close_events().map(Message::WindowClosed)
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         update::update(self, message)
     }
 
-    pub fn view(&self) -> Element<'_, Message> {
-        view::view(self)
+    pub fn view(&self, window: window::Id) -> Element<'_, Message> {
+        view::view(self, window)
     }
 
-    pub fn theme(&self) -> Theme {
+    pub fn theme(&self, _window: window::Id) -> Theme {
         if self.theme.is_dark() {
             Theme::Dark
         } else {
