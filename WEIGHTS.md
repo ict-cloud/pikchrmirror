@@ -63,8 +63,22 @@ the executable. When shipping a relocated build, copy the model directory there.
 
 ## Memory and speed
 
-Weights are quantized to 4 bit when loaded, on the CPU. Expect several GB of
-RAM while loading and a slow first start.
+The large layers are quantized to 4 bit when the model loads, on the CPU.
+Granite 4's Mamba layers use plain (unquantized) projections, which run in
+32-bit floats (`f32`) so they work with candle's CPU matmul. That means several
+GB of RAM while loading and a slow first start.
+
+`PIKCHR_MODEL_DTYPE` (runtime, default `f32`) overrides the precision. `bf16`
+fails on the CPU with `unsupported dtype BF16 for op matmul`, and `f16` only works
+on some platforms (not with Apple's Accelerate), so keep the default unless you
+know your platform supports it.
+
+To check a model directory end to end without the GUI:
+
+```sh
+PIKCHR_MODEL_DIR=target/pikchr-models/granite \
+  cargo test -p PikchrMirror --features llm -- --ignored --nocapture
+```
 
 ## Notes
 

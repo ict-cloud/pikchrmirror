@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mistralrs::{
-    DeviceMapSetting, IsqBits, Model, RequestBuilder, TextMessageRole, TextModelBuilder,
+    DeviceMapSetting, IsqBits, Model, ModelDType, RequestBuilder, TextMessageRole, TextModelBuilder,
 };
 
 /// Id of the model selected at build time (`models.toml` / `PIKCHR_MODEL`);
@@ -16,6 +16,21 @@ const BUILT_MODEL_DIR: &str = env!("PIKCHRMIRROR_MODEL_DIR");
 /// Maximum number of tokens generated per reply. A complete diagram needs far
 /// more than the few dozen tokens a chat answer does.
 const MAX_REPLY_TOKENS: usize = 512;
+
+/// Parse `PIKCHR_MODEL_DTYPE`. Defaults to f32: candle's CPU matmul has no BF16
+/// kernel, and mistralrs would otherwise pick BF16 on macOS. Granite 4's Mamba
+/// projections are plain (unquantized) linear layers that run in this dtype, so
+/// BF16 fails there with "unsupported dtype BF16 for op matmul".
+fn parse_dtype(value: Option<&str>) -> Result<ModelDType, String> {
+    match value.map(|v| v.trim().to_ascii_lowercase()).as_deref() {
+        None | Some("") | Some("f32") => Ok(ModelDType::F32),
+        Some("f16") => Ok(ModelDType::F16),
+        Some("bf16") => Ok(ModelDType::BF16),
+        Some(other) => Err(format!(
+            "PIKCHR_MODEL_DTYPE must be f32, f16 or bf16, got `{other}`"
+        )),
+    }
+}
 
 pub struct MistralRs(Model);
 
@@ -90,9 +105,12 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
         ));
     }
 
-    // Weights ship as bf16 safetensors; quantize to 4 bit on load to keep RAM
-    // and CPU inference time reasonable.
+    let dtype = parse_dtype(std::env::var("PIKCHR_MODEL_DTYPE").ok().as_deref())?;
+
+    // Weights ship as bf16 safetensors; quantize the large layers to 4 bit on load
+    // to keep RAM and CPU inference time reasonable.
     let model = TextModelBuilder::new(dir.to_string_lossy().into_owned())
+        .with_dtype(dtype)
         .with_auto_isq(IsqBits::Four)
         .with_force_cpu()
         // Skip mistralrs' memory-based auto device mapping: on some hosts it misreads
@@ -101,7 +119,7 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
         .with_device_mapping(DeviceMapSetting::dummy())
         .build()
         .await
-        .map_err(|e| format!("Failed to load model `{MODEL_ID}`: {e}"))?;
+        .map_err(|e| format!("Failed to load model from {}: {e}", dir.display()))?;
 
     Ok(Arc::new(MistralRs(model)))
 }
@@ -256,6 +274,32 @@ mod tests {
         assert!(none.contains("PIKCHR_MODEL"), "{none}");
         let missing = locate_model_dir(None, "/nonexistent/model", None, "granite").unwrap_err();
         assert!(missing.contains("/nonexistent/model"), "{missing}");
+    }
+
+    #[test]
+    fn test_parse_dtype() {
+        assert!(matches!(parse_dtype(None), Ok(ModelDType::F32)));
+        assert!(matches!(parse_dtype(Some(" F16 ")), Ok(ModelDType::F16)));
+        assert!(matches!(parse_dtype(Some("bf16")), Ok(ModelDType::BF16)));
+        assert!(parse_dtype(Some("int8")).unwrap_err().contains("int8"));
+    }
+
+    /// End-to-end check of the real load + generate path against a model directory.
+    /// Ignored by default (needs weights). Run it with, for example:
+    /// `PIKCHR_MODEL_DIR=/path/to/model cargo test -p PikchrMirror --features llm -- --ignored --nocapture`
+    #[tokio::test]
+    #[ignore = "needs a model directory in PIKCHR_MODEL_DIR"]
+    async fn smoke_load_and_generate() {
+        let model = load_model().await.expect("model loads");
+        let reply = generate(
+            model,
+            vec![("user".to_string(), "draw me a box".to_string())],
+            system_prompt("box"),
+        )
+        .await
+        .expect("model replies");
+        println!("reply: {reply}");
+        assert!(!reply.is_empty());
     }
 
     #[test]
