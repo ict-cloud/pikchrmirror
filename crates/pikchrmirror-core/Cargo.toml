@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-log = "0.4.*"
+log.workspace = true
 pikchr = "0.1.*"
 
 [dependencies.resvg]
