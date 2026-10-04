@@ -9,6 +9,6 @@ name = "pikchr-mcp"
 path = "src/main.rs"
 
 [dependencies]
-base64 = "0.22.*"
+base64 = "0.23.*"
 pikchrmirror-core = { path = "../pikchrmirror-core" }
 serde_json = "1.0.*"
