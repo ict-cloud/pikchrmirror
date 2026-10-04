@@ -41,8 +41,9 @@ To add a model, add a `[models.<id>]` table (`repo`, optionally `revision`,
 
 1. resolves the model from `PIKCHR_MODEL` or `models.toml`,
 2. lists the repository through the Hugging Face API and downloads the config,
-   tokenizer and `*.safetensors` files into `target/pikchr-models/<id>/`
-   (verifying each file size, resumable per file),
+   tokenizer, chat template (`chat_template.jinja`) and `*.safetensors` files into
+   `target/pikchr-models/<id>/` (verifying each file size, resumable per file) and
+   fails the build if the model ends up without a chat template,
 3. skips the network entirely on later builds once the download is complete,
 4. records the directory in the binary.
 

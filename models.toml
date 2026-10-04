@@ -14,7 +14,8 @@
 selected = "granite"
 
 # `include` (optional) lists top-level file patterns to download; the default is
-# the config, tokenizer and safetensors files. `revision` defaults to "main" -
+# the config, tokenizer, chat template (*.jinja) and safetensors files. A model
+# needs a chat template, or every chat request is rejected. `revision` defaults to "main" -
 # pin a commit hash for reproducible builds.
 
 [models.granite]

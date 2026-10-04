@@ -31,9 +31,17 @@ fn default_revision() -> String {
 }
 
 fn default_include() -> Vec<String> {
-    ["*.json", "*.safetensors", "*.txt", "tokenizer.model"]
-        .map(String::from)
-        .to_vec()
+    // `*.jinja` carries `chat_template.jinja`, where current repositories keep the
+    // chat template; without it the model cannot be used for chat.
+    [
+        "*.json",
+        "*.jinja",
+        "*.safetensors",
+        "*.txt",
+        "tokenizer.model",
+    ]
+    .map(String::from)
+    .to_vec()
 }
 
 fn default_supported() -> bool {
@@ -201,6 +209,20 @@ fn encode_segment(s: &str) -> String {
     out
 }
 
+/// Whether `dir` holds a chat template in any of the places mistralrs reads:
+/// `chat_template.jinja`, `chat_template.json`, or the `chat_template` field of
+/// `tokenizer_config.json`.
+pub fn has_chat_template(dir: &Path) -> bool {
+    if dir.join("chat_template.jinja").is_file() || dir.join("chat_template.json").is_file() {
+        return true;
+    }
+    fs::read_to_string(dir.join("tokenizer_config.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.get("chat_template").cloned())
+        .is_some_and(|t| !t.is_null() && t != "")
+}
+
 /// Directory a model is stored in below `cache_root`.
 pub fn model_dir(cache_root: &Path, spec: &ModelSpec) -> PathBuf {
     cache_root.join(&spec.id)
@@ -326,6 +348,15 @@ pub fn fetch(
             }
         }
         fs::rename(&part, &target).map_err(|e| format!("rename {}: {e}", part.display()))?;
+    }
+
+    // Fail the build now rather than at the first chat message, minutes after load.
+    if !has_chat_template(&dir) {
+        return Err(format!(
+            "{} @ {} has no chat template (chat_template.jinja, chat_template.json or a \
+             `chat_template` in tokenizer_config.json) among the files matching {:?}",
+            spec.repo, spec.revision, spec.include
+        ));
     }
 
     let stamp = Stamp {

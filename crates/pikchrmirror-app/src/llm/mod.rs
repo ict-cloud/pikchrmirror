@@ -61,6 +61,16 @@ fn locate_model_dir(
     ))
 }
 
+/// Whether `dir` holds a chat template (`chat_template.jinja`, `chat_template.json`
+/// or a `chat_template` entry in `tokenizer_config.json`). Without one every chat
+/// request is rejected, so check up front for a clear error.
+fn has_chat_template(dir: &Path) -> bool {
+    dir.join("chat_template.jinja").is_file()
+        || dir.join("chat_template.json").is_file()
+        || std::fs::read_to_string(dir.join("tokenizer_config.json"))
+            .is_ok_and(|s| s.contains("\"chat_template\""))
+}
+
 pub async fn load_model() -> Result<Arc<MistralRs>, String> {
     let exe_dir = std::env::current_exe()
         .ok()
@@ -71,6 +81,14 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
         exe_dir,
         MODEL_ID,
     )?;
+    if !has_chat_template(&dir) {
+        return Err(format!(
+            "no chat template in {} (expected chat_template.jinja, chat_template.json or a \
+             `chat_template` in tokenizer_config.json). Rebuild with --features llm to \
+             re-download the model files",
+            dir.display()
+        ));
+    }
 
     // Weights ship as bf16 safetensors; quantize to 4 bit on load to keep RAM
     // and CPU inference time reasonable.
@@ -238,6 +256,30 @@ mod tests {
         assert!(none.contains("PIKCHR_MODEL"), "{none}");
         let missing = locate_model_dir(None, "/nonexistent/model", None, "granite").unwrap_err();
         assert!(missing.contains("/nonexistent/model"), "{missing}");
+    }
+
+    #[test]
+    fn test_has_chat_template() {
+        let dir = std::env::temp_dir().join(format!("pikchr-tmpl-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        assert!(!has_chat_template(&dir));
+        std::fs::write(
+            dir.join("tokenizer_config.json"),
+            r#"{"model_max_length": 8}"#,
+        )
+        .unwrap();
+        assert!(!has_chat_template(&dir));
+        std::fs::write(
+            dir.join("tokenizer_config.json"),
+            r#"{"chat_template": "x"}"#,
+        )
+        .unwrap();
+        assert!(has_chat_template(&dir));
+        std::fs::remove_file(dir.join("tokenizer_config.json")).unwrap();
+        std::fs::write(dir.join("chat_template.jinja"), "x").unwrap();
+        assert!(has_chat_template(&dir));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

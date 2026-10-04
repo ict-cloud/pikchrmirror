@@ -154,6 +154,7 @@ fn temp_dir(tag: &str) -> PathBuf {
 fn sample_files() -> Vec<(&'static str, Vec<u8>)> {
     vec![
         ("config.json", b"{}".to_vec()),
+        ("chat_template.jinja", b"{{ messages }}".to_vec()),
         ("model.safetensors", vec![7u8; 4096]),
     ]
 }
@@ -178,7 +179,12 @@ fn fetch_downloads_filtered_files_then_skips_network() {
     assert!(!dir.join("model.safetensors.part").exists());
 
     let after_first = hub.requests.load(Ordering::SeqCst);
-    assert_eq!(after_first, 3, "listing + two files");
+    assert_eq!(after_first, 4, "listing + three files");
+    assert_eq!(
+        fs::read(dir.join("chat_template.jinja")).unwrap(),
+        b"{{ messages }}",
+        "the chat template must be downloaded by default"
+    );
     fetch(&spec(), &cache, &options, &mut |_| {}).unwrap();
     assert_eq!(
         hub.requests.load(Ordering::SeqCst),
@@ -245,5 +251,110 @@ fn fetch_reports_http_errors() {
     missing.repo = "org/missing".into();
     let err = fetch(&missing, &cache, &options, &mut |_| {}).unwrap_err();
     assert!(err.contains("404"), "{err}");
+    let _ = fs::remove_dir_all(&cache);
+}
+
+#[test]
+fn fetch_fails_without_chat_template() {
+    let files = vec![
+        ("config.json", b"{}".to_vec()),
+        (
+            "tokenizer_config.json",
+            br#"{"model_max_length": 8}"#.to_vec(),
+        ),
+        ("model.safetensors", vec![7u8; 16]),
+    ];
+    let hub = fake_hub(files, false);
+    let cache = temp_dir("notemplate");
+    let options = FetchOptions {
+        endpoint: Some(hub.endpoint.clone()),
+        token: None,
+    };
+    let err = fetch(&spec(), &cache, &options, &mut |_| {}).unwrap_err();
+    assert!(err.contains("chat template"), "{err}");
+    assert!(
+        !cache.join("granite").join(STAMP_FILE).exists(),
+        "no stamp => retried next build"
+    );
+    let _ = fs::remove_dir_all(&cache);
+}
+
+#[test]
+fn fetch_accepts_template_inside_tokenizer_config() {
+    let files = vec![
+        ("config.json", b"{}".to_vec()),
+        (
+            "tokenizer_config.json",
+            br#"{"chat_template": "{{ messages }}"}"#.to_vec(),
+        ),
+        ("model.safetensors", vec![7u8; 16]),
+    ];
+    let hub = fake_hub(files, false);
+    let cache = temp_dir("embedded");
+    let options = FetchOptions {
+        endpoint: Some(hub.endpoint.clone()),
+        token: None,
+    };
+    fetch(&spec(), &cache, &options, &mut |_| {}).unwrap();
+    let _ = fs::remove_dir_all(&cache);
+}
+
+#[test]
+fn chat_template_detection() {
+    let dir = temp_dir("detect");
+    fs::create_dir_all(&dir).unwrap();
+    assert!(!has_chat_template(&dir));
+    fs::write(
+        dir.join("tokenizer_config.json"),
+        r#"{"chat_template": null}"#,
+    )
+    .unwrap();
+    assert!(!has_chat_template(&dir), "null is not a template");
+    fs::write(
+        dir.join("tokenizer_config.json"),
+        r#"{"chat_template": ""}"#,
+    )
+    .unwrap();
+    assert!(!has_chat_template(&dir), "empty is not a template");
+    fs::write(dir.join("chat_template.jinja"), "x").unwrap();
+    assert!(has_chat_template(&dir));
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn stale_cache_without_jinja_pattern_is_refetched() {
+    // Reproduces a checkout built before the chat template was downloaded: weights
+    // and a *complete* stamp for the old include list are already on disk.
+    let hub = fake_hub(sample_files(), false);
+    let cache = temp_dir("stale");
+    let dir = cache.join("granite");
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join("config.json"), b"{}").unwrap();
+    fs::write(dir.join("model.safetensors"), vec![7u8; 4096]).unwrap();
+    let old_include: Vec<String> = ["*.json", "*.safetensors", "*.txt", "tokenizer.model"]
+        .map(String::from)
+        .to_vec();
+    let stamp = Stamp {
+        repo: spec().repo,
+        revision: spec().revision,
+        include: old_include,
+        commit: None,
+        files: vec!["config.json".into(), "model.safetensors".into()],
+    };
+    fs::write(dir.join(STAMP_FILE), serde_json::to_string(&stamp).unwrap()).unwrap();
+    assert!(!has_chat_template(&dir));
+
+    let options = FetchOptions {
+        endpoint: Some(hub.endpoint.clone()),
+        token: None,
+    };
+    fetch(&spec(), &cache, &options, &mut |_| {}).unwrap();
+
+    assert!(has_chat_template(&dir), "template must be picked up");
+    assert_eq!(
+        hub.requests.load(Ordering::SeqCst),
+        2,
+        "listing + only the missing template; existing weights are reused"
+    );
     let _ = fs::remove_dir_all(&cache);
 }
