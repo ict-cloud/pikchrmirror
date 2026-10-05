@@ -24,14 +24,10 @@ PIKCHR_MODEL=none    cargo check --features llm              # compile only, no 
 |------------|-----------------------------------------|--------|
 | `qwen`     | Qwen2.5 0.5B Instruct                   | supported (default) |
 | `granite`  | IBM Granite 4.0 H Micro (3B instruct)   | supported |
-| `apertus`  | Swiss AI Apertus 8B Instruct            | registered, **not loadable yet** |
-| `soofi`    | Soofi S Instruct (30B-A3B)              | registered, **not loadable yet** |
 
-Inference uses [mistralrs](https://github.com/EricLBuehler/mistral.rs) 0.8.1.
-It has a loader for IBM Granite 4.0 (`GraniteMoeHybrid`, safetensors) but none
-for Apertus or Soofi, so selecting those stops the build with the reason. Soofi
-S is also a 30B-parameter model, far too large to ship with a desktop app.
-Support for them needs a newer mistralrs or another backend.
+Inference uses [mistralrs](https://github.com/EricLBuehler/mistral.rs) 0.8.1, so a
+model needs an architecture it can load. A table with `supported = false` and a
+`reason` stops the build with that reason when selected.
 
 To add a model, add a `[models.<id>]` table (`repo`, optionally `revision`,
 `include`, `supported`). Pin `revision` to a commit hash for reproducible builds.

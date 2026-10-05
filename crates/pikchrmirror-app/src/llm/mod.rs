@@ -69,15 +69,18 @@ pub fn system_prompt(current_src: &str) -> String {
         r#"You are a pikchr diagram assistant. Pikchr is a PIC-like diagram language.
 
 Key pikchr syntax:
-- box "label" — draw a box
-- circle "label" — draw a circle
-- arrow — draw an arrow (follows previous object)
-- line — draw a line
-- text "label" — add text
-- fit — fit to content
-- rad 10px — border radius
-- right, down, left, up — directions
-- 200% — distance/size modifier
+- box "label" — draw a box; circle "label"; text "label"; line; arrow
+- objects are laid out in the current direction: right (default), down, left, up
+- arrow right 200% — move 200% of the default length
+- box "A"; arrow; box "B" — statements are separated by newline or ;
+- rad 10px — rounded corners; fit — size to the text
+
+Example request: "two boxes joined by an arrow"
+```pikchr
+box "A"
+arrow
+box "B"
+```
 
 Current diagram source:
 {}
