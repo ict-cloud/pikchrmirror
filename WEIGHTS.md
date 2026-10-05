@@ -42,7 +42,7 @@ To add a model, add a `[models.<id>]` table (`repo`, optionally `revision`,
 
 1. resolves the model from `PIKCHR_MODEL` or `models.toml`,
 2. lists the repository through the Hugging Face API and downloads the config,
-   tokenizer, chat template (`chat_template.jinja`) and `*.safetensors` files into
+   tokenizer, chat template (`chat_template.jinja`, or inside `tokenizer_config.json`) and `*.safetensors` files into
    `target/pikchr-models/<id>/` (verifying each file size, resumable per file) and
    fails the build if the model ends up without a chat template,
 3. skips the network entirely on later builds once the download is complete,
@@ -59,20 +59,14 @@ Build-time environment variables:
 
 The weights are *located*, not compiled into the executable: a 3B model is
 several GB, which `include_bytes!` handles poorly. At runtime the app looks in
-`PIKCHR_MODEL_DIR`, then the build-time directory, then `models/<id>/` next to
-the executable. When shipping a relocated build, copy the model directory there.
+`PIKCHR_MODEL_DIR`, then the build-time directory. When shipping a relocated
+build, set `PIKCHR_MODEL_DIR` to the copied model directory.
 
 ## Memory and speed
 
-The large layers are quantized to 4 bit when the model loads, on the CPU.
-Some layers (e.g. Granite 4's Mamba projections) stay unquantized and run in
-32-bit floats (`f32`) so they work with candle's CPU matmul. That means several
-GB of RAM while loading and a slow first start.
-
-`PIKCHR_MODEL_DTYPE` (runtime, default `f32`) overrides the precision. `bf16`
-fails on the CPU with `unsupported dtype BF16 for op matmul`, and `f16` only works
-on some platforms (not with Apple's Accelerate), so keep the default unless you
-know your platform supports it.
+The model runs on the CPU in 32-bit floats (`f32`, candle's CPU matmul has no
+BF16 kernel) without quantization. Qwen2.5 0.5B needs about 2 GB of RAM; a larger
+model such as Granite 3B needs several times that.
 
 To check a model directory end to end without the GUI:
 
