@@ -18,9 +18,8 @@ const BUILT_MODEL_DIR: &str = env!("PIKCHRMIRROR_MODEL_DIR");
 const MAX_REPLY_TOKENS: usize = 512;
 
 /// Parse `PIKCHR_MODEL_DTYPE`. Defaults to f32: candle's CPU matmul has no BF16
-/// kernel, and mistralrs would otherwise pick BF16 on macOS. Granite 4's Mamba
-/// projections are plain (unquantized) linear layers that run in this dtype, so
-/// BF16 fails there with "unsupported dtype BF16 for op matmul".
+/// kernel, and mistralrs would otherwise pick BF16 on macOS. Unquantized linear layers
+/// run in this dtype, so BF16 fails with "unsupported dtype BF16 for op matmul".
 fn parse_dtype(value: Option<&str>) -> Result<ModelDType, String> {
     match value.map(|v| v.trim().to_ascii_lowercase()).as_deref() {
         None | Some("") | Some("f32") => Ok(ModelDType::F32),
