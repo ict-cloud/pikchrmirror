@@ -10,19 +10,20 @@ is a configuration item.
 the model for every build:
 
 ```toml
-selected = "granite"
+selected = "qwen"
 ```
 
 A single build can override it with an environment variable:
 
 ```sh
-PIKCHR_MODEL=granite cargo build --release --features llm   # download + bundle
+PIKCHR_MODEL=qwen cargo build --release --features llm   # download + bundle
 PIKCHR_MODEL=none    cargo check --features llm              # compile only, no download
 ```
 
 | id         | model                                   | status |
 |------------|-----------------------------------------|--------|
-| `granite`  | IBM Granite 4.0 H Micro (3B instruct)   | supported (default) |
+| `qwen`     | Qwen2.5 0.5B Instruct                   | supported (default) |
+| `granite`  | IBM Granite 4.0 H Micro (3B instruct)   | supported |
 | `apertus`  | Swiss AI Apertus 8B Instruct            | registered, **not loadable yet** |
 | `soofi`    | Soofi S Instruct (30B-A3B)              | registered, **not loadable yet** |
 
@@ -64,7 +65,7 @@ the executable. When shipping a relocated build, copy the model directory there.
 ## Memory and speed
 
 The large layers are quantized to 4 bit when the model loads, on the CPU.
-Granite 4's Mamba layers use plain (unquantized) projections, which run in
+Some layers (e.g. Granite 4's Mamba projections) stay unquantized and run in
 32-bit floats (`f32`) so they work with candle's CPU matmul. That means several
 GB of RAM while loading and a slow first start.
 
@@ -76,7 +77,7 @@ know your platform supports it.
 To check a model directory end to end without the GUI:
 
 ```sh
-PIKCHR_MODEL_DIR=target/pikchr-models/granite \
+PIKCHR_MODEL_DIR=target/pikchr-models/qwen \
   cargo test -p PikchrMirror --features llm -- --ignored --nocapture
 ```
 
