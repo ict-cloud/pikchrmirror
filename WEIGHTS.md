@@ -1,6 +1,6 @@
 # LLM Model Weights
 
-The optional chat assistant (`--features llm`) runs a local model. The weights
+The optional local model (`--features llm`) runs inside the `pikchrmirror-mcp` crate. It backs the `generate_pikchr` MCP tool and, through that crate, the desktop app's chat assistant. The weights
 are **not** stored in git: they are downloaded **at build time** and the model
 is a configuration item.
 
@@ -16,8 +16,8 @@ selected = "qwen"
 A single build can override it with an environment variable:
 
 ```sh
-PIKCHR_MODEL=qwen cargo build --release --features llm   # download + bundle
-PIKCHR_MODEL=none    cargo check --features llm              # compile only, no download
+PIKCHR_MODEL=qwen cargo build --release -p pikchrmirror-mcp --features llm   # download + bundle
+PIKCHR_MODEL=none    cargo check -p pikchrmirror-mcp --features llm          # compile only, no download
 ```
 
 | id         | model                                   | status |
@@ -34,7 +34,7 @@ To add a model, add a `[models.<id>]` table (`repo`, optionally `revision`,
 
 ## What happens at build time
 
-`crates/pikchrmirror-app/build.rs` (only with `--features llm`):
+`crates/pikchrmirror-mcp/build.rs` (only with `--features llm`):
 
 1. resolves the model from `PIKCHR_MODEL` or `models.toml`,
 2. lists the repository through the Hugging Face API and downloads the config,
@@ -54,7 +54,7 @@ Build-time environment variables:
 | `HF_TOKEN`           | access token for gated repositories |
 
 The weights are *located*, not compiled into the executable: a 3B model is
-several GB, which `include_bytes!` handles poorly. At runtime the app looks in
+several GB, which `include_bytes!` handles poorly. At runtime `pikchr-mcp` and the app look in
 `PIKCHR_MODEL_DIR`, then the build-time directory. When shipping a relocated
 build, set `PIKCHR_MODEL_DIR` to the copied model directory.
 
@@ -64,11 +64,11 @@ The model runs on the CPU in 32-bit floats (`f32`, candle's CPU matmul has no
 BF16 kernel) without quantization. Qwen2.5 0.5B needs about 2 GB of RAM; a larger
 model such as Granite 3B needs several times that.
 
-To check a model directory end to end without the GUI:
+To check a model directory end to end without the GUI (generates a diagram and asserts it compiles):
 
 ```sh
 PIKCHR_MODEL_DIR=target/pikchr-models/qwen \
-  cargo test -p PikchrMirror --features llm -- --ignored --nocapture
+  cargo test -p pikchrmirror-mcp --features llm -- --ignored --nocapture
 ```
 
 ## Notes

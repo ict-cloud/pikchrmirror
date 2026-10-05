@@ -1,5 +1,4 @@
-#![cfg(feature = "llm")]
-
+use std::future::Future;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -13,6 +12,9 @@ const BUILT_MODEL_DIR: &str = env!("PIKCHRMIRROR_MODEL_DIR");
 /// Maximum number of tokens generated per reply. A complete diagram needs far
 /// more than the few dozen tokens a chat answer does.
 const MAX_REPLY_TOKENS: usize = 512;
+
+/// How many times `generate_pikchr` asks the model for a diagram that compiles.
+const MAX_ATTEMPTS: usize = 3;
 
 pub struct MistralRs(Model);
 
@@ -129,6 +131,65 @@ pub async fn generate(
         .ok_or_else(|| "empty response from model".to_string())
 }
 
+/// Feedback sent back to the model when its diagram does not compile.
+fn repair_prompt(e: &pikchrmirror_core::CompileError) -> String {
+    let position = e.line.map(|l| format!(" at line {l}")).unwrap_or_default();
+    format!(
+        "Pikchr error{position}: {}\n{}. Fix it.",
+        e.message, e.context
+    )
+}
+
+/// Generate pikchr for the conversation in `history` (the last entry being the
+/// user's request) and compile-check it, asking the model to fix compile errors
+/// (up to 3 attempts). Returns the model's reply, which contains the diagram in a
+/// ```pikchr block. A reply without such a block is returned as is (plain chat),
+/// so the caller decides what that means. Fails if the model fails or the diagram
+/// still does not compile after the last attempt. The self-repair matters most
+/// for small models.
+pub async fn generate_pikchr(
+    model: Arc<MistralRs>,
+    history: Vec<(String, String)>,
+    current_src: &str,
+) -> Result<String, String> {
+    let system = system_prompt(current_src);
+    generate_checked(history, |messages| {
+        generate(model.clone(), messages, system.clone())
+    })
+    .await
+}
+
+/// The compile-and-repair loop of `generate_pikchr`, with the model call injected.
+async fn generate_checked<F, Fut>(
+    mut history: Vec<(String, String)>,
+    mut ask: F,
+) -> Result<String, String>
+where
+    F: FnMut(Vec<(String, String)>) -> Fut,
+    Fut: Future<Output = Result<String, String>>,
+{
+    let mut last_error = String::new();
+    for attempt in 1..=MAX_ATTEMPTS {
+        let reply = ask(history.clone()).await?;
+        let Some(code) = extract_pikchr_block(&reply) else {
+            return Ok(reply);
+        };
+        match pikchrmirror_core::render_svg(&code) {
+            Ok(_) => return Ok(reply),
+            Err(e) => {
+                last_error = repair_prompt(&e);
+                if attempt < MAX_ATTEMPTS {
+                    history.push(("assistant".to_string(), reply));
+                    history.push(("user".to_string(), last_error.clone()));
+                }
+            }
+        }
+    }
+    Err(format!(
+        "the generated diagram still does not compile after {MAX_ATTEMPTS} attempts. Last error: {last_error}"
+    ))
+}
+
 /// Extract pikchr code from the model's response.
 pub fn extract_pikchr_block(reply: &str) -> Option<String> {
     // Find the first ```pikchr block
@@ -184,20 +245,108 @@ mod tests {
 
     /// End-to-end check of the real load + generate path against a model directory.
     /// Ignored by default (needs weights). Run it with, for example:
-    /// `PIKCHR_MODEL_DIR=/path/to/model cargo test -p PikchrMirror --features llm -- --ignored --nocapture`
+    /// `PIKCHR_MODEL_DIR=/path/to/model cargo test -p pikchrmirror-mcp --features llm -- --ignored --nocapture`
     #[tokio::test]
     #[ignore = "needs a model directory in PIKCHR_MODEL_DIR"]
     async fn smoke_load_and_generate() {
         let model = load_model().await.expect("model loads");
-        let reply = generate(
+        let reply = generate_pikchr(
             model,
-            vec![("user".to_string(), "draw me a box".to_string())],
-            system_prompt("box"),
+            vec![(
+                "user".to_string(),
+                "two boxes joined by an arrow".to_string(),
+            )],
+            "",
         )
         .await
-        .expect("model replies");
+        .expect("model replies with a diagram that compiles");
         println!("reply: {reply}");
-        assert!(!reply.is_empty());
+        let code = extract_pikchr_block(&reply).expect("reply contains a pikchr block");
+        pikchrmirror_core::render_svg(&code).expect("diagram compiles");
+    }
+
+    type Messages = Vec<(String, String)>;
+    type CallLog = std::sync::Arc<std::sync::Mutex<Vec<Messages>>>;
+
+    fn scripted(
+        replies: Vec<&'static str>,
+    ) -> (
+        CallLog,
+        impl FnMut(Messages) -> std::future::Ready<Result<String, String>>,
+    ) {
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let log = seen.clone();
+        let mut replies = replies.into_iter();
+        let ask = move |messages| {
+            log.lock().unwrap().push(messages);
+            std::future::ready(
+                replies
+                    .next()
+                    .map(String::from)
+                    .ok_or("no more replies".to_string()),
+            )
+        };
+        (seen, ask)
+    }
+
+    const GOOD: &str = "```pikchr\nbox \"A\"\n```";
+    const BAD: &str = "```pikchr\nbox\nbogus_token_here\n```";
+
+    fn history() -> Vec<(String, String)> {
+        vec![("user".to_string(), "a box".to_string())]
+    }
+
+    #[tokio::test]
+    async fn valid_diagram_is_returned_after_one_call() {
+        let (seen, ask) = scripted(vec![GOOD]);
+        assert_eq!(generate_checked(history(), ask).await, Ok(GOOD.to_string()));
+        assert_eq!(seen.lock().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn reply_without_a_block_is_returned_unchecked() {
+        let (seen, ask) = scripted(vec!["Sure, what shape?"]);
+        assert_eq!(
+            generate_checked(history(), ask).await,
+            Ok("Sure, what shape?".to_string())
+        );
+        assert_eq!(seen.lock().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn compile_error_is_fed_back_and_repaired() {
+        let (seen, ask) = scripted(vec![BAD, GOOD]);
+        assert_eq!(generate_checked(history(), ask).await, Ok(GOOD.to_string()));
+        let seen = seen.lock().unwrap();
+        assert_eq!(seen.len(), 2);
+        let retry = &seen[1];
+        assert_eq!(retry.len(), 3);
+        assert_eq!(retry[1], ("assistant".to_string(), BAD.to_string()));
+        assert_eq!(retry[2].0, "user");
+        assert!(
+            retry[2].1.starts_with("Pikchr error at line 2"),
+            "{}",
+            retry[2].1
+        );
+        assert!(retry[2].1.ends_with("Fix it."));
+    }
+
+    #[tokio::test]
+    async fn gives_up_after_three_failed_attempts() {
+        let (seen, ask) = scripted(vec![BAD, BAD, BAD, GOOD]);
+        let err = generate_checked(history(), ask).await.unwrap_err();
+        assert!(err.contains("after 3 attempts"), "{err}");
+        assert!(err.contains("Pikchr error"), "{err}");
+        assert_eq!(seen.lock().unwrap().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn model_failure_is_propagated() {
+        let (_, ask) = scripted(vec![]);
+        assert_eq!(
+            generate_checked(history(), ask).await,
+            Err("no more replies".to_string())
+        );
     }
 
     #[test]

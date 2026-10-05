@@ -2,7 +2,11 @@
 name = "pikchrmirror-mcp"
 version = "0.1.0"
 edition = "2021"
-description = "Stdio MCP server exposing pikchr rendering as a tool for any MCP-capable LLM client"
+description = "Stdio MCP server exposing pikchr rendering (and an optional local diagram-writing model) as tools for any MCP-capable LLM client"
+
+[lib]
+name = "pikchrmirror_mcp"
+path = "src/lib.rs"
 
 [[bin]]
 name = "pikchr-mcp"
@@ -12,3 +16,29 @@ path = "src/main.rs"
 base64 = "0.23.*"
 pikchrmirror-core = { path = "../pikchrmirror-core" }
 serde_json = "1.0.*"
+
+[dependencies.mistralrs]
+version = "0.8.1"
+optional = true
+
+# Apple's Accelerate framework only exists on macOS; enabling it elsewhere
+# fails the build ("library kind `framework` is only supported on Apple targets").
+[target.'cfg(target_os = "macos")'.dependencies.mistralrs]
+version = "0.8.1"
+optional = true
+features = ["accelerate"]
+
+[dependencies.tokio]
+version = "1.53.*"
+features = ["rt", "time", "macros"]
+optional = true
+
+[build-dependencies.pikchrmirror-models]
+path = "../pikchrmirror-models"
+optional = true
+
+[features]
+# Local diagram-writing model (the `generate_pikchr` tool, also used by the app's
+# chat). The model is selected in /models.toml and downloaded at build time
+# (set PIKCHR_MODEL=none to compile without downloading anything).
+llm = ["dep:mistralrs", "dep:tokio", "dep:pikchrmirror-models"]

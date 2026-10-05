@@ -17,7 +17,8 @@ compile it, and if it reports an error (message, line, col) fix that spot and ca
 Call pikchr_syntax_reference (or read resource pikchr://syntax-reference) for a syntax cheat sheet.";
 
 fn tool_definitions() -> Value {
-    json!([
+    #[cfg_attr(not(feature = "llm"), allow(unused_mut))]
+    let mut tools = json!([
         {
             "name": "render_pikchr",
             "description": "Compile pikchr diagram source into SVG (and optionally PNG). \
@@ -50,7 +51,38 @@ fn tool_definitions() -> Value {
             "description": "Compact pikchr syntax cheat sheet with verified examples.",
             "inputSchema": { "type": "object", "properties": {} }
         }
-    ])
+    ]);
+    #[cfg(feature = "llm")]
+    tools
+        .as_array_mut()
+        .expect("tool list is an array")
+        .push(generate_pikchr_definition());
+    tools
+}
+
+#[cfg(feature = "llm")]
+fn generate_pikchr_definition() -> Value {
+    json!({
+        "name": "generate_pikchr",
+        "description": "Write a pikchr diagram with a small local model and return source that is \
+    verified to compile (the model is asked to fix its own compile errors, up to 3 attempts). The first \
+    call loads the model and can take a minute. If it returns isError, write the diagram yourself and \
+    check it with render_pikchr.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "What the diagram should show."
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Optional existing pikchr source to modify."
+                }
+            },
+            "required": ["prompt"]
+        }
+    })
 }
 
 fn rpc_result(id: Value, result: Value) -> Value {
@@ -138,6 +170,9 @@ fn call_tool(params: &Value) -> Value {
             })
         }
         "pikchr_syntax_reference" => text_result(SYNTAX_REFERENCE, false),
+        #[cfg(feature = "llm")]
+        "generate_pikchr" => catch_unwind(AssertUnwindSafe(|| generate_pikchr(&args)))
+            .unwrap_or_else(|_| text_result("Internal error while generating the diagram.", true)),
         other => text_result(format!("Unknown tool: {other}"), true),
     }
 }
@@ -192,6 +227,73 @@ fn render_pikchr(args: &Value) -> Value {
     }
 
     json!({ "content": content, "structuredContent": structured, "isError": false })
+}
+
+#[cfg(feature = "llm")]
+fn generate_pikchr(args: &Value) -> Value {
+    let Some(prompt) = args.get("prompt").and_then(Value::as_str) else {
+        return text_result("Missing required string argument 'prompt'.", true);
+    };
+    let source = args.get("source").and_then(Value::as_str).unwrap_or("");
+    if prompt.len() > MAX_SOURCE_BYTES || source.len() > MAX_SOURCE_BYTES {
+        return text_result(
+            format!("'prompt' and 'source' are limited to {MAX_SOURCE_BYTES} bytes each."),
+            true,
+        );
+    }
+    match local::generate(prompt, source) {
+        Ok((code, rendered)) => json!({
+            "content": [{ "type": "text", "text": code }],
+            "structuredContent": { "source": code, "svg": rendered.svg },
+            "isError": false
+        }),
+        Err(reason) => text_result(
+            format!("Local model could not produce a diagram: {reason}"),
+            true,
+        ),
+    }
+}
+
+/// The local model behind `generate_pikchr`, loaded lazily so that server startup and
+/// `render_pikchr` never pay for it.
+#[cfg(feature = "llm")]
+mod local {
+    use std::sync::{Arc, OnceLock};
+
+    use pikchrmirror_core::Rendered;
+
+    use crate::llm::{self, MistralRs};
+
+    static MODEL: OnceLock<Arc<MistralRs>> = OnceLock::new();
+    static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+
+    pub fn generate(prompt: &str, source: &str) -> Result<(String, Rendered), String> {
+        if RUNTIME.get().is_none() {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .map_err(|e| format!("cannot start async runtime: {e}"))?;
+            let _ = RUNTIME.set(rt);
+        }
+        let rt = RUNTIME.get().expect("runtime was just set");
+
+        // A failed load is not cached, so the next call retries it.
+        let model = match MODEL.get() {
+            Some(model) => model.clone(),
+            None => {
+                let model = rt.block_on(llm::load_model())?;
+                MODEL.get_or_init(|| model).clone()
+            }
+        };
+
+        let history = vec![("user".to_string(), prompt.to_string())];
+        let reply = rt.block_on(llm::generate_pikchr(model, history, source))?;
+        let code = llm::extract_pikchr_block(&reply)
+            .ok_or_else(|| "the model did not reply with a pikchr diagram".to_string())?;
+        let rendered = pikchrmirror_core::render_svg(&code)
+            .map_err(|e| format!("{}\n{}", e.message, e.context))?;
+        Ok((code, rendered))
+    }
 }
 
 fn compile_error_result(e: &pikchrmirror_core::CompileError) -> Value {
@@ -271,6 +373,7 @@ mod tests {
         assert_eq!(r["id"], 7);
     }
 
+    #[cfg(not(feature = "llm"))]
     #[test]
     fn tools_list_has_both_tools_with_schemas() {
         let r = call(r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#);
@@ -278,6 +381,56 @@ mod tests {
         let names: Vec<_> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
         assert_eq!(names, ["render_pikchr", "pikchr_syntax_reference"]);
         assert_eq!(tools[0]["inputSchema"]["required"][0], "source");
+    }
+
+    #[cfg(feature = "llm")]
+    #[test]
+    fn tools_list_adds_generate_pikchr_with_llm() {
+        let r = call(r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#);
+        let tools = r["result"]["tools"].as_array().unwrap();
+        let names: Vec<_> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
+        assert_eq!(
+            names,
+            [
+                "render_pikchr",
+                "pikchr_syntax_reference",
+                "generate_pikchr"
+            ]
+        );
+        assert_eq!(tools[2]["inputSchema"]["required"][0], "prompt");
+    }
+
+    #[cfg(feature = "llm")]
+    #[test]
+    fn generate_pikchr_validates_arguments_before_loading_the_model() {
+        let call_generate = |args: Value| {
+            let req = json!({
+                "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                "params": { "name": "generate_pikchr", "arguments": args }
+            });
+            call(&req.to_string())["result"].clone()
+        };
+        let r = call_generate(json!({}));
+        assert_eq!(r["isError"], true);
+        assert!(r["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("'prompt'"));
+        let r = call_generate(json!({ "prompt": "x".repeat(MAX_SOURCE_BYTES + 1) }));
+        assert_eq!(r["isError"], true);
+    }
+
+    #[cfg(not(feature = "llm"))]
+    #[test]
+    fn generate_pikchr_is_unknown_without_llm() {
+        let r = call(
+            r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"generate_pikchr"}}"#,
+        );
+        assert_eq!(r["result"]["isError"], true);
+        assert!(r["result"]["content"][0]["text"]
+            .as_str()
+            .unwrap()
+            .contains("Unknown tool"));
     }
 
     #[test]

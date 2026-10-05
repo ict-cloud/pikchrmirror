@@ -22,7 +22,7 @@ pub enum Message {
     #[cfg(feature = "llm")]
     ChatSubmit,
     #[cfg(feature = "llm")]
-    ModelLoaded(Result<std::sync::Arc<crate::llm::MistralRs>, String>),
+    ModelLoaded(Result<std::sync::Arc<pikchrmirror_mcp::llm::MistralRs>, String>),
     #[cfg(feature = "llm")]
     ChatReplyDone(String),
     #[cfg(feature = "llm")]
