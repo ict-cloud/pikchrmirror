@@ -12,7 +12,10 @@ use iced::Font;
 mod tests;
 
 pub fn main() -> iced::Result {
-    iced::application(MirrorApp::default, MirrorApp::update, MirrorApp::view)
+    // A daemon (instead of a plain application) because the chat assistant lives in
+    // its own window: windows are opened and closed explicitly by `MirrorApp`.
+    iced::daemon(MirrorApp::boot, MirrorApp::update, MirrorApp::view)
+        .subscription(MirrorApp::subscription)
         .theme(MirrorApp::theme)
         .font(include_bytes!("../fonts/material-design-icons.ttf").as_slice())
         .default_font(Font::MONOSPACE)

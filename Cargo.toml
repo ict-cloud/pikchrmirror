@@ -4,8 +4,12 @@ members = [
     "crates/pikchrmirror-core",
     "crates/pikchrmirror-app",
     "crates/pikchrmirror-mcp",
+    "crates/pikchrmirror-models",
 ]
 default-members = ["crates/pikchrmirror-app"]
+
+[workspace.dependencies]
+log = "0.4.*"
 
 [profile.release]
 opt-level = "s" # or "z"

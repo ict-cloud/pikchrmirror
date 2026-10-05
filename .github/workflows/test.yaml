@@ -72,3 +72,27 @@ jobs:
           shared-key: "test-yaml"
 
       - run: "cargo test --workspace"
+
+  # The chat assistant is behind the `llm` feature. Compile and test it without
+  # downloading weights so a broken feature build is caught here, not by users.
+  llm:
+    name: "Cargo test (llm feature)"
+    needs: "check"
+    runs-on: "ubuntu-latest"
+    env:
+      PIKCHR_MODEL: "none"
+    steps:
+      - name: "Check out the repo"
+        uses: actions/checkout@v4
+
+      - uses: "dtolnay/rust-toolchain@stable"
+        with:
+          components: "clippy"
+
+      - uses: "Swatinem/rust-cache@v2"
+        with:
+          shared-key: "test-yaml-llm"
+
+      - run: "cargo clippy -p PikchrMirror --all-targets --features llm -- -D warnings"
+
+      - run: "cargo test -p PikchrMirror --features llm"

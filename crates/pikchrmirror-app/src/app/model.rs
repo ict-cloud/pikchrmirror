@@ -14,6 +14,7 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
 "##;
         let (svg, error) = pikchrmirror_core::pik_svgstring(initial_text, "");
         Self {
+            main_window: None,
             text: String::from(initial_text),
             content: text_editor::Content::with_text(initial_text),
             svg,

@@ -89,3 +89,151 @@ box "Outside" fit with .n at 0.4in below Group.s
 - Keep one flow direction per diagram and use labels for cross-links.
 - A syntax error is reported as `ERROR: <message>` at a source line and column; fix that token, not the whole diagram.
 - Full reference: https://pikchr.org/home/doc/trunk/doc/userman.md
+
+## Formal grammar
+
+Complete grammar from https://pikchr.org/home/doc/trunk/doc/grammar.md. Italic names are rules, bold or quoted tokens are literal,
+`?` optional, `*` zero or more, `|` alternatives. UPPERCASE names are lexical tokens (LABEL starts with a capital letter, VARIABLE is a lowercase name or `$name`, ORDINAL is `1st`, `2nd`, ...).
+
+```text
+statement-list:
+    statement?
+    statement-list NEWLINE statement?
+    statement-list ; statement?
+
+statement:
+    object-definition
+    LABEL : object-definition
+    LABEL : place
+    direction
+    VARIABLE assignment-op expr
+    define VARIABLE CODEBLOCK
+    print print-argument (, print-argument)*
+    assert ( expr == expr )
+    assert ( position == position )
+
+direction:        right | down | left | up
+assignment-op:    = | += | -= | *= | /=
+print-argument:   expr | STRING
+
+object-definition:
+    object-class attribute*
+    STRING text-attribute* attribute*
+    [ statement-list ] attribute*
+
+object-class:
+    arc | arrow | box | circle | cylinder | diamond | dot | ellipse | file
+    | line | move | oval | spline | text
+
+attribute:
+    path-attribute
+    location-attribute
+    STRING text-attribute*
+    same | same as object
+    numeric-property new-property-value
+    dashed expr? | dotted expr?
+    color color-expr | fill color-expr
+    behind object
+    cw | ccw
+    <- | -> | <->
+    invis | invisible
+    thick | thin | solid
+    chop | fit
+
+color-expr:          expr
+new-property-value:  expr | expr %
+numeric-property:    diameter | ht | height | rad | radius | thickness | width | wid
+
+text-attribute:
+    above | aligned | below | big | bold | mono | monospace | center
+    | italic | ljust | rjust | small
+
+path-attribute:
+    from position
+    then? to position
+    then? go? direction line-length?
+    then? go? direction until? even with position
+    (then|go) line-length? heading compass-angle
+    (then|go) line-length? compass-direction
+    close
+
+line-length:       expr | expr %
+compass-angle:     expr
+compass-direction: n | north | ne | e | east | se | s | south | sw | w | west | nw
+
+location-attribute:
+    at position
+    with edgename at position
+    with dot-edgename at position
+
+position:
+    expr , expr
+    place
+    place + expr , expr
+    place - expr , expr
+    place + ( expr , expr )
+    place - ( expr , expr )
+    ( position , position )
+    ( position )
+    fraction of the way between position and position
+    fraction way between position and position
+    fraction between position and position
+    fraction < position , position >
+    distance which-way-from position
+
+fraction:  expr
+distance:  expr
+
+which-way-from:
+    above | below | right of | left of
+    n of | north of | ne of | e of | east of | se of | s of | south of
+        | sw of | w of | west of | nw of
+    heading compass-angle from
+
+place:
+    object
+    object dot-edgename
+    edgename of object
+    ORDINAL vertex of object
+
+object:
+    LABEL
+    object . LABEL
+    nth-object of|in object
+
+nth-object:
+    ORDINAL object-class
+    ORDINAL last object-class
+    ORDINAL previous object-class
+    last object-class | previous object-class
+    last | previous
+    ORDINAL [] | ORDINAL last [] | ORDINAL previous []
+    last [] | previous []
+
+dot-edgename:
+    .n | .north | .t | .top | .ne | .e | .east | .right | .se | .s | .south
+    | .bot | .bottom | .sw | .w | .west | .left | .nw | .c | .center
+    | .start | .end
+
+edgename:
+    n | north | ne | e | east | se | s | south | sw | w | west | nw
+    | t | top | bot | bottom | left | right | c | center | start | end
+
+expr:
+    NUMBER | VARIABLE | COLORNAME
+    place .x | place .y
+    object dot-property
+    ( expr )
+    expr + expr | expr - expr | expr * expr | expr / expr
+    - expr | + expr
+    abs ( expr )
+    cos ( expr ) | sin ( expr )
+    dist ( position , position )
+    int ( expr )
+    max ( expr , expr ) | min ( expr , expr )
+    sqrt ( expr )
+
+dot-property:
+    .color | .dashed | .diameter | .dotted | .fill | .ht | .height | .rad
+    | .radius | .thickness | .wid | .width
+```

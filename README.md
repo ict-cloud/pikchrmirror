@@ -19,6 +19,9 @@ A preview area on the right side of the screen where the rendered SVG is shown.
 ## Theming
 You can choose between different editor themes.
 
+## Chat assistant (optional)
+Built with `--features llm`, the toolbar gets a **Chat** button that opens the assistant in its **own window**, next to the editor. Describe a diagram, then use **Apply to editor** to take the generated code. The window can be closed and reopened independently; closing the editor window quits the app. The model runs locally and is selected in `models.toml`; it is downloaded at build time, not stored in git. See [WEIGHTS.md](WEIGHTS.md).
+
 # MCP server (`pikchr-mcp`)
 `pikchr-mcp` lets any [MCP](https://modelcontextprotocol.io)-capable LLM client (Claude Desktop, Claude Code, IDE agents, ...) render pikchr diagrams as a tool, so the model writes the diagram and no model needs to be embedded in the app. It speaks MCP over stdio.
 

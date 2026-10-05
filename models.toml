@@ -1,0 +1,27 @@
+# Model registry for the optional `llm` feature (chat assistant).
+#
+# The weights are NOT stored in git. When the app is built with
+# `--features llm`, build.rs downloads the selected model once into
+# `target/pikchr-models/<id>/` and bakes that location into the binary.
+#
+# Pick the model here, or override a single build with an environment variable:
+#   PIKCHR_MODEL=qwen cargo build --features llm
+#   PIKCHR_MODEL=none    cargo check --features llm   # compile only, nothing downloaded (CI)
+#
+# Other build-time knobs: PIKCHR_MODEL_CACHE (download dir), HF_ENDPOINT (mirror),
+# HF_TOKEN (gated repositories). See WEIGHTS.md.
+
+selected = "qwen"
+
+# `include` (optional) lists top-level file patterns to download; the default is
+# the config, tokenizer, chat template (*.jinja) and safetensors files. A model
+# needs a chat template, or every chat request is rejected. `revision` defaults to "main" -
+# pin a commit hash for reproducible builds.
+
+[models.qwen]
+name = "Qwen2.5 0.5B Instruct (chat, Apache-2.0)"
+repo = "Qwen/Qwen2.5-0.5B-Instruct"
+
+[models.granite]
+name = "IBM Granite 4.0 H Micro (3B instruct, code + chat, Apache-2.0)"
+repo = "ibm-granite/granite-4.0-h-micro"

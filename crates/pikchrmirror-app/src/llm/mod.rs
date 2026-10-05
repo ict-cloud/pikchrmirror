@@ -1,13 +1,18 @@
 #![cfg(feature = "llm")]
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
-use mistralrs::{DeviceMapSetting, GgufModelBuilder, Model, RequestBuilder, TextMessageRole};
+use mistralrs::{
+    DeviceMapSetting, Model, ModelDType, RequestBuilder, TextMessageRole, TextModelBuilder,
+};
 
-const MODEL_FILE: &str = "Qwen3-0.6B-Q4_K_M.gguf";
+/// Where build.rs downloaded the model; empty when nothing was bundled.
+const BUILT_MODEL_DIR: &str = env!("PIKCHRMIRROR_MODEL_DIR");
 
-/// Embedded GGUF model bytes for Qwen3 0.6B Q4_K_M quantization
-pub static EMBEDDED_GGUF: &[u8] = include_bytes!("../../assets/models/Qwen3-0.6B-Q4_K_M.gguf");
+/// Maximum number of tokens generated per reply. A complete diagram needs far
+/// more than the few dozen tokens a chat answer does.
+const MAX_REPLY_TOKENS: usize = 512;
 
 pub struct MistralRs(Model);
 
@@ -17,31 +22,43 @@ impl std::fmt::Debug for MistralRs {
     }
 }
 
-pub async fn load_model() -> Result<Arc<MistralRs>, String> {
-    let cache_dir = std::env::temp_dir().join("pikchrmirror");
-    let model_path = cache_dir.join(MODEL_FILE);
-    std::fs::create_dir_all(&cache_dir).map_err(|e| format!("create cache dir: {e}"))?;
-
-    // Refresh if the cached file size differs from the embedded bytes (e.g. stale 1-byte placeholder).
-    let needs_write = std::fs::metadata(&model_path)
-        .map(|m| m.len() as usize != EMBEDDED_GGUF.len())
-        .unwrap_or(true);
-    if needs_write {
-        std::fs::write(&model_path, EMBEDDED_GGUF).map_err(|e| format!("write model: {e}"))?;
+/// Find the directory holding the model files: `PIKCHR_MODEL_DIR` (runtime
+/// override), else the build-time download location.
+fn locate_model_dir(env_dir: Option<PathBuf>, built_dir: &str) -> Result<PathBuf, String> {
+    let dir = env_dir
+        .or_else(|| (!built_dir.is_empty()).then(|| PathBuf::from(built_dir)))
+        .ok_or(
+            "no model is bundled in this build. Rebuild with PIKCHR_MODEL=<id> \
+                (see models.toml) or set PIKCHR_MODEL_DIR to a model directory",
+        )?;
+    if dir.join("config.json").is_file() {
+        Ok(dir)
+    } else {
+        Err(format!(
+            "model files not found in {}. Rebuild to download them or set PIKCHR_MODEL_DIR",
+            dir.display()
+        ))
     }
+}
 
-    let model = GgufModelBuilder::new(
-        cache_dir.to_string_lossy().into_owned(),
-        vec![MODEL_FILE.to_string()],
-    )
-    .with_force_cpu()
-    // Skip mistralrs' memory-based auto device mapping: on some hosts it misreads
-    // available CPU RAM as 0MB and refuses to load any model. We only ever run on
-    // a single forced CPU device, so just place all layers there directly.
-    .with_device_mapping(DeviceMapSetting::dummy())
-    .build()
-    .await
-    .map_err(|e| format!("Failed to load model: {e}"))?;
+pub async fn load_model() -> Result<Arc<MistralRs>, String> {
+    let dir = locate_model_dir(
+        std::env::var_os("PIKCHR_MODEL_DIR").map(PathBuf::from),
+        BUILT_MODEL_DIR,
+    )?;
+
+    // f32: candle's CPU matmul has no BF16 kernel, and mistralrs would otherwise
+    // pick BF16 on macOS. No ISQ: at 0.5B f32 is ~2 GB and 4-bit costs quality.
+    let model = TextModelBuilder::new(dir.to_string_lossy().into_owned())
+        .with_dtype(ModelDType::F32)
+        .with_force_cpu()
+        // Skip mistralrs' memory-based auto device mapping: on some hosts it misreads
+        // available CPU RAM as 0MB and refuses to load any model. We only ever run on
+        // a single forced CPU device, so just place all layers there directly.
+        .with_device_mapping(DeviceMapSetting::dummy())
+        .build()
+        .await
+        .map_err(|e| format!("Failed to load model from {}: {e}", dir.display()))?;
 
     Ok(Arc::new(MistralRs(model)))
 }
@@ -52,15 +69,18 @@ pub fn system_prompt(current_src: &str) -> String {
         r#"You are a pikchr diagram assistant. Pikchr is a PIC-like diagram language.
 
 Key pikchr syntax:
-- box "label" — draw a box
-- circle "label" — draw a circle
-- arrow — draw an arrow (follows previous object)
-- line — draw a line
-- text "label" — add text
-- fit — fit to content
-- rad 10px — border radius
-- right, down, left, up — directions
-- 200% — distance/size modifier
+- box "label" — draw a box; circle "label"; text "label"; line; arrow
+- objects are laid out in the current direction: right (default), down, left, up
+- arrow right 200% — move 200% of the default length
+- box "A"; arrow; box "B" — statements are separated by newline or ;
+- rad 10px — rounded corners; fit — size to the text
+
+Example request: "two boxes joined by an arrow"
+```pikchr
+box "A"
+arrow
+box "B"
+```
 
 Current diagram source:
 {}
@@ -75,55 +95,38 @@ pub async fn generate(
     messages: Vec<(String, String)>,
     system_prompt: String,
 ) -> Result<String, String> {
-    // Spawn on a separate task so panics inside the generation are caught as JoinError
-    // rather than silently dropped by iced's Task machinery (which would leave `generating`
-    // stuck at true forever).
-    let handle = tokio::spawn(async move {
-        // Use RequestBuilder instead of TextMessages so we can cap max_len.
-        // Without a cap, Qwen3 on CPU can generate for minutes.
-        // Disable thinking: Qwen3 defaults thinking=true, adding a large <think>... preamble.
-        let mut req = RequestBuilder::new()
-            .enable_thinking(false)
-            .set_sampler_max_len(150)
-            .add_message(TextMessageRole::System, system_prompt);
-        for (role, text) in messages {
-            let r = if role == "assistant" {
-                TextMessageRole::Assistant
-            } else {
-                TextMessageRole::User
-            };
-            req = req.add_message(r, text);
-        }
-        model
-            .0
-            .send_chat_request(req)
-            .await
-            .map_err(|e| format!("{e}"))
-            .and_then(|response| {
-                response
-                    .choices
-                    .first()
-                    .and_then(|c| {
-                        c.message
-                            .content
-                            .clone()
-                            .or_else(|| c.message.reasoning_content.clone())
-                    })
-                    .ok_or_else(|| "empty response from model".to_string())
-            })
-    });
-
-    match tokio::time::timeout(std::time::Duration::from_secs(180), handle).await {
-        Ok(Ok(result)) => result,
-        Ok(Err(join_err)) => {
-            if join_err.is_panic() {
-                Err("Model panicked during generation — check logs".to_string())
-            } else {
-                Err("Generation task was cancelled".to_string())
-            }
-        }
-        Err(_) => Err("Generation timed out after 180 s".to_string()),
+    // RequestBuilder instead of TextMessages so we can cap max_len: without a cap,
+    // generation on CPU can run for minutes. Thinking is off so reasoning-capable
+    // models skip their <think>... preamble.
+    let mut req = RequestBuilder::new()
+        .enable_thinking(false)
+        .set_sampler_max_len(MAX_REPLY_TOKENS)
+        .add_message(TextMessageRole::System, system_prompt);
+    for (role, text) in messages {
+        let r = if role == "assistant" {
+            TextMessageRole::Assistant
+        } else {
+            TextMessageRole::User
+        };
+        req = req.add_message(r, text);
     }
+    let response = tokio::time::timeout(
+        std::time::Duration::from_secs(180),
+        model.0.send_chat_request(req),
+    )
+    .await
+    .map_err(|_| "Generation timed out after 180 s".to_string())?
+    .map_err(|e| e.to_string())?;
+    response
+        .choices
+        .first()
+        .and_then(|c| {
+            c.message
+                .content
+                .clone()
+                .or_else(|| c.message.reasoning_content.clone())
+        })
+        .ok_or_else(|| "empty response from model".to_string())
 }
 
 /// Extract pikchr code from the model's response.
@@ -157,6 +160,44 @@ mod tests {
         let reply = "No pikchr here";
         let result = extract_pikchr_block(reply);
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_locate_model_dir() {
+        let dir = std::env::temp_dir().join(format!("pikchr-locate-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("config.json"), "{}").unwrap();
+        let built = dir.to_string_lossy();
+        assert_eq!(
+            locate_model_dir(Some(dir.clone()), "/nonexistent"),
+            Ok(dir.clone())
+        );
+        assert_eq!(locate_model_dir(None, &built), Ok(dir.clone()));
+        assert!(locate_model_dir(None, "")
+            .unwrap_err()
+            .contains("PIKCHR_MODEL"));
+        assert!(locate_model_dir(None, "/nonexistent")
+            .unwrap_err()
+            .contains("/nonexistent"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// End-to-end check of the real load + generate path against a model directory.
+    /// Ignored by default (needs weights). Run it with, for example:
+    /// `PIKCHR_MODEL_DIR=/path/to/model cargo test -p PikchrMirror --features llm -- --ignored --nocapture`
+    #[tokio::test]
+    #[ignore = "needs a model directory in PIKCHR_MODEL_DIR"]
+    async fn smoke_load_and_generate() {
+        let model = load_model().await.expect("model loads");
+        let reply = generate(
+            model,
+            vec![("user".to_string(), "draw me a box".to_string())],
+            system_prompt("box"),
+        )
+        .await
+        .expect("model replies");
+        println!("reply: {reply}");
+        assert!(!reply.is_empty());
     }
 
     #[test]
