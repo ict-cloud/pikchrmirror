@@ -97,7 +97,7 @@ pub fn system_prompt(current_src: &str) -> String {
 - Write only pikchr. No Mermaid (`A --> B`), Graphviz (`a -> b;`) or `label=` syntax.
 - Text is always in double quotes; put `fit` on boxes with text.
 - Labels for objects start with a capital letter: `Db: cylinder "DB" fit`.
-- Copy the patterns from the examples above.
+- The cheat sheet is a starting point, not a limit: use other pikchr features when the request needs them.
 
 Current diagram source:
 {current}
@@ -149,7 +149,7 @@ pub async fn generate(
 fn repair_prompt(e: &pikchrmirror_core::CompileError) -> String {
     let position = e.line.map(|l| format!(" at line {l}")).unwrap_or_default();
     format!(
-        "Pikchr error{position}: {}\n{}\nUse only syntax from the cheat sheet. Fix it.",
+        "Pikchr error{position}: {}\n{}\nThe cheat sheet shows working patterns. Fix it.",
         e.message, e.context
     )
 }
