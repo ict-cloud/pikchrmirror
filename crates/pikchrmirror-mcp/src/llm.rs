@@ -65,30 +65,44 @@ pub async fn load_model() -> Result<Arc<MistralRs>, String> {
     Ok(Arc::new(MistralRs(model)))
 }
 
+/// The MCP syntax cheat sheet without its formal grammar and tool hint: its
+/// verified examples teach a small model more than BNF does, at far fewer tokens.
+fn cheat_sheet() -> String {
+    let r = crate::server::SYNTAX_REFERENCE;
+    r.split("\n## Formal grammar")
+        .next()
+        .unwrap_or(r)
+        .trim_end()
+        .replace(
+            " Call `render_pikchr` to check your source; fix errors using the reported line/col.",
+            "",
+        )
+}
+
 /// Get the system prompt for the pikchr assistant.
 pub fn system_prompt(current_src: &str) -> String {
+    let cheat_sheet = cheat_sheet();
+    let current = if current_src.trim().is_empty() {
+        "(empty)".to_string()
+    } else {
+        format!("```pikchr\n{}\n```", current_src.trim())
+    };
     format!(
         r#"You are a pikchr diagram assistant. Pikchr is a PIC-like diagram language.
 
-Key pikchr syntax:
-- box "label" — draw a box; circle "label"; text "label"; line; arrow
-- objects are laid out in the current direction: right (default), down, left, up
-- arrow right 200% — move 200% of the default length
-- box "A"; arrow; box "B" — statements are separated by newline or ;
-- rad 10px — rounded corners; fit — size to the text
+{cheat_sheet}
 
-Example request: "two boxes joined by an arrow"
-```pikchr
-box "A"
-arrow
-box "B"
-```
+## Rules
+
+- Write only pikchr. No Mermaid (`A --> B`), Graphviz (`a -> b;`) or `label=` syntax.
+- Text is always in double quotes; put `fit` on boxes with text.
+- Labels for objects start with a capital letter: `Db: cylinder "DB" fit`.
+- Copy the patterns from the examples above.
 
 Current diagram source:
-{}
+{current}
 
-Generate a pikchr code block for the user's request. Reply with ONLY a single ```pikchr code block containing the complete diagram source."#,
-        current_src
+Generate a pikchr code block for the user's request. When changing the current diagram, return the complete modified diagram. Reply with ONLY a single ```pikchr code block containing the complete diagram source."#
     )
 }
 
@@ -135,7 +149,7 @@ pub async fn generate(
 fn repair_prompt(e: &pikchrmirror_core::CompileError) -> String {
     let position = e.line.map(|l| format!(" at line {l}")).unwrap_or_default();
     format!(
-        "Pikchr error{position}: {}\n{}. Fix it.",
+        "Pikchr error{position}: {}\n{}\nUse only syntax from the cheat sheet. Fix it.",
         e.message, e.context
     )
 }
@@ -352,7 +366,10 @@ mod tests {
     #[test]
     fn test_system_prompt_includes_context() {
         let prompt = system_prompt("box \"test\"");
-        assert!(prompt.contains("box \"test\""));
-        assert!(prompt.contains("pikchr"));
+        assert!(prompt.contains("```pikchr\nbox \"test\"\n```"));
+        assert!(prompt.contains("box \"Start\" rad 10px fit"));
+        assert!(!prompt.contains("Formal grammar"));
+        assert!(!prompt.contains("render_pikchr"));
+        assert!(system_prompt("  \n").contains("Current diagram source:\n(empty)"));
     }
 }
