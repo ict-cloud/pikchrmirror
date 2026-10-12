@@ -1,31 +1,30 @@
-[package]
-name = "PikchrMirror"
-version = "0.2.2"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = [
+    "crates/pikchrmirror-core",
+    "crates/pikchrmirror-app",
+    "crates/pikchrmirror-mcp",
+    "crates/pikchrmirror-models",
+]
+default-members = ["crates/pikchrmirror-app"]
 
-[dependencies]
+[workspace.dependencies]
 log = "0.4.*"
-pikchr = "0.1.*"
-pretty_env_logger = "0.5.*"
-rfd = "0.17.*"
-xml-rs = "1.0.*"
-
-[dependencies.tokio]
-version = "1.52.*"
-features = ["fs", "rt", "macros"]
-
-[dependencies.resvg]
-version = "0.47.*"
-
-[dependencies.iced]
-version = "0.14.*"
-features = ["svg", "highlighter", "tokio"]
-
-[dependencies.iced_wgpu]
-version = "0.14.*"
 
 [profile.release]
 opt-level = "s" # or "z"
 codegen-units = 1
 lto = "thin" #alternatives "fat" or "false"
 strip = "debuginfo"
+
+# Debug builds of candle/mistralrs are ~25x slower at inference (99s vs 4s for a
+# 150-token reply), making the chat feature look hung. Optimize just these crates
+# even in dev builds so `cargo run --features llm` stays usable.
+[profile.dev.package.candle-core]
+opt-level = 3
+[profile.dev.package.candle-nn]
+opt-level = 3
+[profile.dev.package.mistralrs-core]
+opt-level = 3
+[profile.dev.package.mistralrs-quant]
+opt-level = 3

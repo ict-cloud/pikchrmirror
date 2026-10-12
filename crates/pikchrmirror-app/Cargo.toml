@@ -1,0 +1,31 @@
+[package]
+name = "PikchrMirror"
+version = "0.2.3"
+edition = "2021"
+
+[dependencies]
+log.workspace = true
+pikchrmirror-core = { path = "../pikchrmirror-core" }
+pretty_env_logger = "0.5.*"
+rfd = "0.17.*"
+
+[dependencies.tokio]
+version = "1.53.*"
+features = ["fs", "rt", "macros"]
+
+[dependencies.iced]
+version = "0.14.*"
+features = ["svg", "highlighter", "tokio"]
+
+[dependencies.iced_wgpu]
+version = "0.14.*"
+
+[dependencies.pikchrmirror-mcp]
+path = "../pikchrmirror-mcp"
+optional = true
+
+[features]
+# Chat assistant. The local model lives in pikchrmirror-mcp (selected in
+# /models.toml, downloaded at build time; set PIKCHR_MODEL=none to compile
+# without downloading anything).
+llm = ["dep:pikchrmirror-mcp", "pikchrmirror-mcp/llm"]

@@ -1,5 +1,4 @@
 use super::MirrorApp;
-use crate::parser::pikchr;
 
 use iced::highlighter;
 use iced::widget::text_editor;
@@ -13,8 +12,9 @@ box rad 10px "HTML" "(pikchr.c)" fit
 arrow right 200% "pikchr" "SVG"
 box rad 10px "pikchr" "(cgi/pikchr.c)" fit
 "##;
-        let (svg, error) = pikchr::pik_svgstring(initial_text, "");
+        let (svg, error) = pikchrmirror_core::pik_svgstring(initial_text, "");
         Self {
+            main_window: None,
             text: String::from(initial_text),
             content: text_editor::Content::with_text(initial_text),
             svg,
@@ -23,6 +23,8 @@ box rad 10px "pikchr" "(cgi/pikchr.c)" fit
             file_error: None,
             export_pending: false,
             export_quality: crate::app::ExportQuality::High,
+            #[cfg(feature = "llm")]
+            chat: crate::app::ChatState::default(),
         }
     }
 }

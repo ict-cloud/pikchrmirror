@@ -248,3 +248,71 @@ fn test_theme_affects_app_appearance() {
         "InspiredGitHub should not be a dark theme"
     );
 }
+
+#[test]
+fn test_boot_opens_main_window() {
+    let (app, _open) = MirrorApp::boot();
+    assert!(app.main_window.is_some(), "boot must track the main window");
+}
+
+#[test]
+fn test_window_closed_for_unknown_window_is_ignored() {
+    let mut app = setup_app();
+    let before = app.text.clone();
+    let _task = update::update(&mut app, Message::WindowClosed(iced::window::Id::unique()));
+    assert_eq!(app.text, before);
+}
+
+#[cfg(feature = "llm")]
+mod chat_window {
+    use super::*;
+    use crate::app::chat_state::ModelStatus;
+    use iced::window;
+
+    #[test]
+    fn toggle_opens_separate_window_and_loads_model() {
+        let mut app = setup_app();
+        let _ = update::update(&mut app, Message::ToggleChat);
+        assert!(app.chat.window.is_some(), "chat must get its own window");
+        assert_ne!(app.chat.window, app.main_window);
+        assert_eq!(app.chat.status, ModelStatus::Loading);
+    }
+
+    #[test]
+    fn toggle_again_closes_window_without_reloading() {
+        let mut app = setup_app();
+        let _ = update::update(&mut app, Message::ToggleChat);
+        app.chat.status = ModelStatus::Ready;
+        let _ = update::update(&mut app, Message::ToggleChat);
+        assert!(app.chat.window.is_none());
+        assert_eq!(app.chat.status, ModelStatus::Ready);
+    }
+
+    #[test]
+    fn closing_the_chat_window_clears_state() {
+        let mut app = setup_app();
+        let _ = update::update(&mut app, Message::ToggleChat);
+        let id = app.chat.window.unwrap();
+        let _ = update::update(&mut app, Message::WindowClosed(id));
+        assert!(app.chat.window.is_none());
+    }
+
+    #[test]
+    fn failed_load_is_retried_on_next_open() {
+        let mut app = setup_app();
+        app.chat.status = ModelStatus::Error("boom".into());
+        let _ = update::update(&mut app, Message::ToggleChat);
+        assert_eq!(app.chat.status, ModelStatus::Loading);
+    }
+
+    #[test]
+    fn submit_without_ready_model_keeps_input() {
+        let mut app = setup_app();
+        app.chat.window = Some(window::Id::unique());
+        app.chat.input = "draw a box".into();
+        let _ = update::update(&mut app, Message::ChatSubmit);
+        assert_eq!(app.chat.input, "draw a box");
+        assert!(!app.chat.generating);
+        assert!(app.chat.messages.is_empty());
+    }
+}

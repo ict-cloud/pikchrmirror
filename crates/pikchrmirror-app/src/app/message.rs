@@ -14,4 +14,17 @@ pub enum Message {
     FileOpened(Result<(std::path::PathBuf, String), crate::filehandler::actions::Error>),
     ExportQualitySelected(crate::app::ExportQuality),
     AcknowledgeError,
+    WindowClosed(iced::window::Id),
+    #[cfg(feature = "llm")]
+    ToggleChat,
+    #[cfg(feature = "llm")]
+    ChatInputChanged(String),
+    #[cfg(feature = "llm")]
+    ChatSubmit,
+    #[cfg(feature = "llm")]
+    ModelLoaded(Result<std::sync::Arc<pikchrmirror_mcp::llm::MistralRs>, String>),
+    #[cfg(feature = "llm")]
+    ChatReplyDone(String),
+    #[cfg(feature = "llm")]
+    ApplyProposedCode,
 }

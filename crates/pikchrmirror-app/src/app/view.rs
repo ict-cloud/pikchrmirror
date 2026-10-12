@@ -2,9 +2,21 @@ use super::{Message, MirrorApp};
 use crate::components::controls::controls_row;
 use crate::components::editor::text_editor_component;
 use iced::widget::{button, column, container, row, svg, text};
-use iced::{Element, Length};
+use iced::{window, Element, Length};
 
-pub fn view(model: &MirrorApp) -> Element<'_, Message> {
+#[cfg(feature = "llm")]
+use crate::components::chat::chat_panel;
+
+#[cfg_attr(not(feature = "llm"), allow(unused_variables))]
+pub fn view(model: &MirrorApp, window: window::Id) -> Element<'_, Message> {
+    #[cfg(feature = "llm")]
+    if model.chat.window == Some(window) {
+        return container(chat_panel(&model.chat))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into();
+    }
+
     if let Some(error) = &model.file_error {
         return container(
             column![
@@ -37,14 +49,14 @@ pub fn view(model: &MirrorApp) -> Element<'_, Message> {
     let content = column![
         controls,
         row![
-            column![editor].width(Length::FillPortion(1)),
+            column![editor].width(Length::FillPortion(2)),
             column![
                 container(svg_display)
                     .width(Length::Fill)
                     .height(Length::Fill),
                 text(&model.error)
             ]
-            .width(Length::FillPortion(1))
+            .width(Length::FillPortion(2)),
         ]
     ];
 
