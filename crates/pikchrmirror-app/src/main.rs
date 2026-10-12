@@ -2,8 +2,6 @@ mod app;
 mod components;
 mod filehandler;
 mod img;
-#[cfg(feature = "llm")]
-mod llm;
 
 use app::MirrorApp;
 use iced::Font;

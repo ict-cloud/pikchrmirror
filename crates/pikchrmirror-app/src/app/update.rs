@@ -121,7 +121,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
             ) {
                 model.chat.status = crate::app::chat_state::ModelStatus::Loading;
                 tasks.push(Task::perform(
-                    crate::llm::load_model(),
+                    pikchrmirror_mcp::llm::load_model(),
                     Message::ModelLoaded,
                 ));
             }
@@ -176,11 +176,15 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                     )
                 })
                 .collect::<Vec<_>>();
+            // Same compile-checked, self-repairing generation the MCP tool uses.
             // `model.text` is only the initial/opened text; the editor content is current.
-            let system = crate::llm::system_prompt(&model.content.text());
-            Task::perform(crate::llm::generate(model_ref, history, system), |result| {
-                Message::ChatReplyDone(result.unwrap_or_else(|e| format!("Error: {}", e)))
-            })
+            let current_src = model.content.text();
+            Task::perform(
+                async move {
+                    pikchrmirror_mcp::llm::generate_pikchr(model_ref, history, &current_src).await
+                },
+                |result| Message::ChatReplyDone(result.unwrap_or_else(|e| format!("Error: {}", e))),
+            )
         }
         #[cfg(feature = "llm")]
         Message::ChatReplyDone(reply) => {
@@ -189,7 +193,7 @@ pub fn update(model: &mut MirrorApp, message: Message) -> Task<Message> {
                 text: reply.clone(),
             });
             model.chat.generating = false;
-            model.chat.proposed_code = crate::llm::extract_pikchr_block(&reply);
+            model.chat.proposed_code = pikchrmirror_mcp::llm::extract_pikchr_block(&reply);
             Task::none()
         }
         #[cfg(feature = "llm")]

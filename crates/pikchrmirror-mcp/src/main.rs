@@ -3,7 +3,7 @@
 //! The protocol uses newline-delimited JSON-RPC on stdin/stdout, so nothing but
 //! protocol messages may ever be written to stdout; diagnostics go to stderr.
 
-mod server;
+use pikchrmirror_mcp::server;
 
 use std::io::{self, BufRead, Write};
 

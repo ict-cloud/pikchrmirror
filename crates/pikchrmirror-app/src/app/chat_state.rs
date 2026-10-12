@@ -43,7 +43,7 @@ pub struct ChatState {
     pub window: Option<iced::window::Id>,
     pub input: String,
     pub messages: Vec<ChatTurn>,
-    pub model: Option<Arc<crate::llm::MistralRs>>,
+    pub model: Option<Arc<pikchrmirror_mcp::llm::MistralRs>>,
     pub status: ModelStatus,
     pub generating: bool,
     pub proposed_code: Option<String>,

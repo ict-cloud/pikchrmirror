@@ -73,8 +73,9 @@ jobs:
 
       - run: "cargo test --workspace"
 
-  # The chat assistant is behind the `llm` feature. Compile and test it without
-  # downloading weights so a broken feature build is caught here, not by users.
+  # The local model (MCP `generate_pikchr` tool and the app's chat) is behind the `llm`
+  # feature. Compile and test it without downloading weights so a broken feature build
+  # is caught here, not by users.
   llm:
     name: "Cargo test (llm feature)"
     needs: "check"
@@ -93,6 +94,6 @@ jobs:
         with:
           shared-key: "test-yaml-llm"
 
-      - run: "cargo clippy -p PikchrMirror --all-targets --features llm -- -D warnings"
+      - run: "cargo clippy --workspace --all-targets --features PikchrMirror/llm,pikchrmirror-mcp/llm -- -D warnings"
 
-      - run: "cargo test -p PikchrMirror --features llm"
+      - run: "cargo test --workspace --features PikchrMirror/llm,pikchrmirror-mcp/llm"
