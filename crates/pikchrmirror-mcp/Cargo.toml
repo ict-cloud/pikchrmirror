@@ -29,7 +29,7 @@ optional = true
 features = ["accelerate"]
 
 [dependencies.tokio]
-version = "1.53.*"
+version = "1.54.*"
 features = ["rt", "time", "macros"]
 optional = true
 
