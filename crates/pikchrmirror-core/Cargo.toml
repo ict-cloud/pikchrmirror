@@ -8,4 +8,4 @@ log.workspace = true
 pikchr = "0.1.*"
 
 [dependencies.resvg]
-version = "0.48.*"
+version = "0.49.*"
